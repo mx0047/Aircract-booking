@@ -165,6 +165,9 @@ const Admin = {
                                 <p><strong>Rola:</strong> ${u.role === 'owner' ? 'Majiteľ' : u.role === 'deputy' ? 'Zástupca' : 'Pilot'}</p>
                             </div>
                             <div class="admin__actions" style="flex-wrap: wrap; gap: 8px;">
+                                <button class="btn btn--outline admin__btn-change-pin" data-id="${u.id}" data-name="${u.name}">
+                                    Zmeniť PIN
+                                </button>
                                 ${u.id === currentUserId ? '<span class="admin__note">Váš účet</span>' : `
                                     <button class="btn btn--outline admin__btn-toggle-user" data-id="${u.id}" data-status="${u.status}">
                                         ${u.status === 'active' ? 'Deaktivovať' : 'Aktivovať'}
@@ -271,6 +274,11 @@ const Admin = {
         window.dispatchEvent(new CustomEvent('user-updated'));
     },
 
+    changeUserPin(id, newPin) {
+        DataStore.updateUser(id, { pin: newPin });
+        window.dispatchEvent(new CustomEvent('user-updated'));
+    },
+
     changeUserRole(id, currentRole) {
         const newRole = currentRole === 'deputy' ? 'pilot' : 'deputy';
         DataStore.updateUser(id, { role: newRole });
@@ -351,6 +359,23 @@ const Admin = {
                     }
                 } else {
                     this.approveUser(id);
+                }
+            }
+
+            // Change user PIN
+            if (e.target.closest('.admin__btn-change-pin')) {
+                const btn = e.target.closest('.admin__btn-change-pin');
+                const id = btn.dataset.id;
+                const name = btn.dataset.name;
+                const newPin = prompt(`Zadajte nový 4-miestny PIN pre používateľa "${name}":`);
+                
+                if (newPin !== null) {
+                    if (!/^\d{4}$/.test(newPin)) {
+                        alert('Chyba: PIN kód musí pozostávať presne zo 4 číslic!');
+                        return;
+                    }
+                    this.changeUserPin(id, newPin);
+                    alert(`PIN kód pre používateľa "${name}" bol úspešne zmenený.`);
                 }
             }
 
