@@ -66,6 +66,13 @@ const Auth = {
             return { success: false, message: 'Nesprávne meno alebo PIN.' };
         }
 
+        if (user.status === 'rejected') {
+            return { success: false, message: 'Váš prístup bol zamietnutý administrátorom.' };
+        }
+        if (user.status === 'inactive') {
+            return { success: false, message: 'Váš účet bol deaktivovaný administrátorom.' };
+        }
+
         if (!user.approved && user.role !== 'owner' && user.role !== 'deputy') {
             return { success: false, message: 'Váš účet čaká na schválenie administrátorom.' };
         }
