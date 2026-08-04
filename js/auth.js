@@ -21,7 +21,7 @@ const Auth = {
                 <div class="auth-forms">
                     <form id="login-form" class="auth-form active">
                         <div class="form-group">
-                            <label for="login-name" class="form-label">Meno</label>
+                            <label for="login-name" class="form-label">Meno a priezvisko</label>
                             <input type="text" id="login-name" name="name" required minlength="2" class="form-input">
                         </div>
                         <div class="form-group">
@@ -33,7 +33,7 @@ const Auth = {
 
                     <form id="register-form" class="auth-form" style="display: none;">
                         <div class="form-group">
-                            <label for="register-name" class="form-label">Meno</label>
+                            <label for="register-name" class="form-label">Meno a priezvisko</label>
                             <input type="text" id="register-name" name="name" required minlength="2" class="form-input">
                         </div>
                         <div class="form-group">
