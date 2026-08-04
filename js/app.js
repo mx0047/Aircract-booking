@@ -358,14 +358,14 @@ const App = {
         if (DataStore.getReservationsByPilot) {
             const myRes = DataStore.getReservationsByPilot(user.id);
             const now = new Date().getTime();
-            const myUpcoming = myRes.filter(r => new Date(r.dateFrom).getTime() > now && r.status !== 'rejected');
+            const myUpcoming = myRes.filter(r => new Date(r.dateTo).getTime() > now && r.status !== 'rejected');
             myReservationsCount = myUpcoming.length;
         }
 
         if (DataStore.getReservations) {
             const allRes = DataStore.getReservations();
             const now = new Date().getTime();
-            const allUpcoming = allRes.filter(r => new Date(r.dateFrom).getTime() > now && r.status !== 'rejected');
+            const allUpcoming = allRes.filter(r => new Date(r.dateTo).getTime() > now && r.status !== 'rejected');
             allUpcoming.sort((a, b) => new Date(a.dateFrom).getTime() - new Date(b.dateFrom).getTime());
             if (allUpcoming.length > 0) {
                 nextReservation = allUpcoming[0];
