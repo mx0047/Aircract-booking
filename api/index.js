@@ -11,7 +11,8 @@ const defaultUsers = [
     { id: 'u3', name: 'Martin Otáhal', role: 'pilot', pin: '1234', approved: true, status: 'active' },
     { id: 'u5', name: 'Miro Skuba', role: 'pilot', pin: '3195', approved: true, status: 'active' },
     { id: 'u6', name: 'Ivo Otáhal', role: 'pilot', pin: '0000', approved: true, status: 'active' },
-    { id: 'u7', name: 'Miro Stašák', role: 'pilot', pin: '0000', approved: true, status: 'active' }
+    { id: 'u7', name: 'Miro Stašák', role: 'pilot', pin: '0000', approved: true, status: 'active' },
+    { id: 'u8', name: 'Erik Čermák', role: 'pilot', pin: '0000', approved: true, status: 'active' }
 ];
 
 const defaultFleet = [
