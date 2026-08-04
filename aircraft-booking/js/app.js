@@ -40,10 +40,10 @@ const App = {
 
         // Global Event Listeners
         window.addEventListener('create-booking', (e) => {
-            const { aircraftId, date } = e.detail;
+            const { aircraftId, date, hour } = e.detail;
             this.showModal({
                 title: 'Nová rezervácia',
-                content: typeof Booking.renderBookingForm === 'function' ? Booking.renderBookingForm(aircraftId, date) : 'Formulár nie je k dispozícii.',
+                content: typeof Booking.renderBookingForm === 'function' ? Booking.renderBookingForm(aircraftId, date, hour) : 'Formulár nie je k dispozícii.',
                 actions: [] // Action handled by the form inside modal
             });
         });
