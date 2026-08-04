@@ -72,7 +72,7 @@ Aplikácia je plne pripravená na nasadenie na jedno kliknutie:
 | Igor Špaček | 0000 | Majiteľ (admin) | ✅ Aktívny |
 | Martin Smejkal | 9999 | Zástupca (admin) | ✅ Aktívny |
 | Martin Otáhal | 1234 | Pilot | ✅ Aktívny |
-| Peter Horváth | 5678 | Pilot | ⏳ Čaká na schválenie |
+| Miro Skuba | 3195 | Pilot | ✅ Aktívny |
 
 ---
 
