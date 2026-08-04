@@ -304,14 +304,14 @@ const Calendar = {
                         ✈️ Rýchla rezervácia (${type} ${reg})
                     </h3>
                     <form id="booking-form" class="booking-form" data-aircraft-id="${currentAircraftId}">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px;">
                             <div>
                                 <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Odlet (Vzlet)</label>
-                                <input type="datetime-local" id="booking-datetime-from" required class="form-input" value="${dateStr}T${timeFrom}" style="padding: 8px 10px; font-size: 0.9rem;">
+                                <input type="datetime-local" id="booking-datetime-from" required class="form-input" value="${dateStr}T${timeFrom}" style="padding: 8px 10px; font-size: 0.9rem; width: 100%;">
                             </div>
                             <div>
                                 <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Prílet (Pristátie)</label>
-                                <input type="datetime-local" id="booking-datetime-to" required class="form-input" value="${dateStr}T${timeTo}" style="padding: 8px 10px; font-size: 0.9rem;">
+                                <input type="datetime-local" id="booking-datetime-to" required class="form-input" value="${dateStr}T${timeTo}" style="padding: 8px 10px; font-size: 0.9rem; width: 100%;">
                             </div>
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
