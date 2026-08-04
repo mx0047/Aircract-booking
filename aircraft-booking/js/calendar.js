@@ -58,7 +58,7 @@ const Calendar = {
     },
 
     updateCalendarScreen() {
-        const container = document.querySelector('#calendar-container');
+        const container = document.querySelector('#screen-calendar');
         if (container && currentAircraftId) {
             container.innerHTML = this.renderCalendarScreen(currentAircraftId);
         }
@@ -225,14 +225,14 @@ const Calendar = {
                         height = (bEndHours % 1) * 100;
                     }
 
-                    const isOwn = currentUser && b.userId === currentUser.id;
+                    const isOwn = currentUser && b.pilotId === currentUser.id;
                     const statusClass = b.status === 'pending' ? 'timeline__booking--pending' : 'timeline__booking--approved';
                     const ownClass = isOwn ? 'timeline__booking--own' : '';
 
                     if (renderContent) {
                         html += `
                             <div class="timeline__booking ${statusClass} ${ownClass}" style="top: ${top}%; height: ${height}%">
-                                <span class="timeline__booking-title">${b.userName || 'Pilot'}</span>
+                                <span class="timeline__booking-title">${b.pilotName || 'Pilot'}</span>
                                 <span class="timeline__booking-time">${bStartTime} - ${bEndTime}</span>
                             </div>
                         `;
