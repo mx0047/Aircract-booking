@@ -15,6 +15,9 @@ const defaultFleet = [
 
 class DataStoreImpl {
     constructor() {
+        this.users = [];
+        this.fleet = [];
+        this.reservations = [];
         this.init();
     }
     
@@ -33,103 +36,140 @@ class DataStoreImpl {
     }
     
     init() {
-        if (!localStorage.getItem(PREFIX + 'users')) {
-            this.set('users', defaultUsers);
-        } else {
-            const users = this.get('users', []);
-            let updated = false;
-            users.forEach(u => {
-                if (!u.status) {
-                    u.status = u.approved ? 'active' : 'pending';
-                    updated = true;
-                }
-                // Name migrations
-                if (u.id === 'u2' && u.name === 'Mária Kováčová') { u.name = 'Martin Smejkal'; updated = true; }
-                if (u.id === 'u3' && u.name === 'Ján Novák') { u.name = 'Martin Otáhal'; updated = true; }
-            });
-            if (updated) {
-                this.set('users', users);
+        // Load initially from localStorage as a fast sync cache
+        this.users = this.get('users', defaultUsers);
+        this.fleet = this.get('fleet', defaultFleet);
+        this.reservations = this.get('reservations', []);
+
+        // Run migrations on local cache if needed
+        let updated = false;
+        this.users.forEach(u => {
+            if (!u.status) {
+                u.status = u.approved ? 'active' : 'pending';
+                updated = true;
             }
+            if (u.id === 'u2' && u.name === 'Mária Kováčová') { u.name = 'Martin Smejkal'; updated = true; }
+            if (u.id === 'u3' && u.name === 'Ján Novák') { u.name = 'Martin Otáhal'; updated = true; }
+        });
+        if (updated) {
+            this.set('users', this.users);
         }
-        if (!localStorage.getItem(PREFIX + 'fleet')) {
-            this.set('fleet', defaultFleet);
+    }
+
+    async load() {
+        try {
+            const response = await fetch('/api/data');
+            if (response.ok) {
+                const data = await response.json();
+                this.users = data.users || [];
+                this.fleet = data.fleet || [];
+                this.reservations = data.reservations || [];
+                
+                // Cache back to localStorage
+                this.set('users', this.users);
+                this.set('fleet', this.fleet);
+                this.set('reservations', this.reservations);
+                return true;
+            }
+        } catch (e) {
+            console.error('Failed to load data from API server, using localStorage cache:', e);
         }
-        if (!localStorage.getItem(PREFIX + 'reservations')) {
-            this.set('reservations', []);
+        return false;
+    }
+
+    async saveToServer(type, data) {
+        try {
+            const response = await fetch('/api/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ type, data })
+            });
+            if (!response.ok) {
+                console.error(`Failed to save ${type} to server:`, response.statusText);
+            }
+        } catch (e) {
+            console.error(`Network error saving ${type} to server:`, e);
         }
     }
 
     // --- Fleet ---
-    getFleet() { return this.get('fleet', []); }
+    getFleet() { return this.fleet; }
     
     addAircraft(aircraft) {
-        const fleet = this.getFleet();
-        fleet.push(aircraft);
-        this.set('fleet', fleet);
+        this.fleet.push(aircraft);
+        this.set('fleet', this.fleet);
+        this.saveToServer('fleet', this.fleet);
     }
     
     removeAircraft(id) {
-        this.set('fleet', this.getFleet().filter(a => a.id !== id));
+        this.fleet = this.fleet.filter(a => a.id !== id);
+        this.set('fleet', this.fleet);
+        this.saveToServer('fleet', this.fleet);
     }
 
     // --- Users ---
-    getUsers() { return this.get('users', []); }
+    getUsers() { return this.users; }
     
     addUser(user) {
-        const users = this.getUsers();
-        users.push(user);
-        this.set('users', users);
+        this.users.push(user);
+        this.set('users', this.users);
+        this.saveToServer('users', this.users);
     }
     
     updateUser(id, data) {
-        const users = this.getUsers().map(u => u.id === id ? { ...u, ...data } : u);
-        this.set('users', users);
+        this.users = this.users.map(u => u.id === id ? { ...u, ...data } : u);
+        this.set('users', this.users);
+        this.saveToServer('users', this.users);
     }
 
     removeUser(id) {
-        const users = this.getUsers().filter(u => u.id !== id);
-        this.set('users', users);
+        this.users = this.users.filter(u => u.id !== id);
+        this.set('users', this.users);
+        this.saveToServer('users', this.users);
     }
     
     getUserByNameAndPin(name, pin) {
-        return this.getUsers().find(u => u.name === name && u.pin === pin) || null;
+        return this.users.find(u => u.name === name && u.pin === pin) || null;
     }
     
     getPendingUsers() {
-        return this.getUsers().filter(u => !u.approved && u.status === 'pending');
+        return this.users.filter(u => !u.approved && u.status === 'pending');
     }
 
     // --- Reservations ---
-    getReservations() { return this.get('reservations', []); }
+    getReservations() { return this.reservations; }
     
     addReservation(res) {
-        const r = this.getReservations();
-        r.push(res);
-        this.set('reservations', r);
+        this.reservations.push(res);
+        this.set('reservations', this.reservations);
+        this.saveToServer('reservations', this.reservations);
     }
     
     updateReservation(id, data) {
-        const r = this.getReservations().map(res => res.id === id ? { ...res, ...data } : res);
-        this.set('reservations', r);
+        this.reservations = this.reservations.map(res => res.id === id ? { ...res, ...data } : res);
+        this.set('reservations', this.reservations);
+        this.saveToServer('reservations', this.reservations);
     }
     
     getReservationsByAircraft(aircraftId) {
-        return this.getReservations().filter(r => r.aircraftId === aircraftId);
+        return this.reservations.filter(r => r.aircraftId === aircraftId);
     }
     
     getReservationsByPilot(pilotId) {
-        return this.getReservations().filter(r => r.pilotId === pilotId);
+        return this.reservations.filter(r => r.pilotId === pilotId);
     }
     
     getPendingReservations() {
-        return this.getReservations().filter(r => r.status === 'pending');
+        return this.reservations.filter(r => r.status === 'pending');
     }
     
     getReservationsForDateRange(aircraftId, start, end) {
         const sTime = new Date(start).getTime();
         const eTime = new Date(end).getTime();
         
-        return this.getReservations().filter(r => {
+        return this.reservations.filter(r => {
             if (r.aircraftId !== aircraftId) return false;
             
             const rStart = new Date(r.dateFrom).getTime();
@@ -143,7 +183,6 @@ class DataStoreImpl {
     // --- Session ---
     setCurrentUser(user) {
         if (user) {
-            // Using sessionStorage to keep login for current tab/window only
             sessionStorage.setItem(PREFIX + 'session', JSON.stringify(user));
         } else {
             sessionStorage.removeItem(PREFIX + 'session');
