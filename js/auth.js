@@ -117,13 +117,20 @@ const Auth = {
     },
 
     getCurrentUser() {
-        if (!this.currentUser) {
-            const savedUser = sessionStorage.getItem('currentUser');
-            if (savedUser) {
-                this.currentUser = JSON.parse(savedUser);
+        let sessionUser = null;
+        const savedUser = sessionStorage.getItem('currentUser');
+        if (savedUser) {
+            sessionUser = JSON.parse(savedUser);
+        }
+        if (sessionUser) {
+            // Fetch fresh data from DataStore to get latest approval status
+            const freshUser = DataStore.getUsers().find(u => u.id === sessionUser.id);
+            if (freshUser) {
+                this.currentUser = freshUser;
+                return freshUser;
             }
         }
-        return this.currentUser;
+        return this.currentUser || sessionUser;
     },
 
     isAdmin() {
