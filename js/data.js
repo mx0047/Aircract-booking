@@ -4,7 +4,9 @@ const defaultUsers = [
     { id: 'u1', name: 'Igor Špaček', role: 'owner', pin: '0000', approved: true, status: 'active' },
     { id: 'u2', name: 'Martin Smejkal', role: 'deputy', pin: '9999', approved: true, status: 'active' },
     { id: 'u3', name: 'Martin Otáhal', role: 'pilot', pin: '1234', approved: true, status: 'active' },
-    { id: 'u5', name: 'Miro Skuba', role: 'pilot', pin: '3195', approved: true, status: 'active' }
+    { id: 'u5', name: 'Miro Skuba', role: 'pilot', pin: '3195', approved: true, status: 'active' },
+    { id: 'u6', name: 'Ivo Otáhal', role: 'pilot', pin: '0000', approved: true, status: 'active' },
+    { id: 'u7', name: 'Miro Stašák', role: 'pilot', pin: '0000', approved: true, status: 'active' }
 ];
 
 const defaultFleet = [
@@ -58,6 +60,20 @@ class DataStoreImpl {
             updated = true;
         }
 
+        // Migration: ensure Ivo Otáhal exists
+        const hasIvo = this.users.some(u => u.name === 'Ivo Otáhal');
+        if (!hasIvo) {
+            this.users.push({ id: 'u6', name: 'Ivo Otáhal', role: 'pilot', pin: '0000', approved: true, status: 'active' });
+            updated = true;
+        }
+
+        // Migration: ensure Miro Stašák exists
+        const hasMiroStasak = this.users.some(u => u.name === 'Miro Stašák');
+        if (!hasMiroStasak) {
+            this.users.push({ id: 'u7', name: 'Miro Stašák', role: 'pilot', pin: '0000', approved: true, status: 'active' });
+            updated = true;
+        }
+
         this.users.forEach(u => {
             if (!u.status) {
                 u.status = u.approved ? 'active' : 'pending';
@@ -89,6 +105,20 @@ class DataStoreImpl {
                 const hasMiro = this.users.some(u => u.name === 'Miro Skuba');
                 if (!hasMiro) {
                     this.users.push({ id: 'u5', name: 'Miro Skuba', role: 'pilot', pin: '3195', approved: true, status: 'active' });
+                    wasMigrated = true;
+                }
+
+                // Migration: ensure Ivo Otáhal exists
+                const hasIvo = this.users.some(u => u.name === 'Ivo Otáhal');
+                if (!hasIvo) {
+                    this.users.push({ id: 'u6', name: 'Ivo Otáhal', role: 'pilot', pin: '0000', approved: true, status: 'active' });
+                    wasMigrated = true;
+                }
+
+                // Migration: ensure Miro Stašák exists
+                const hasMiroStasak = this.users.some(u => u.name === 'Miro Stašák');
+                if (!hasMiroStasak) {
+                    this.users.push({ id: 'u7', name: 'Miro Stašák', role: 'pilot', pin: '0000', approved: true, status: 'active' });
                     wasMigrated = true;
                 }
 
