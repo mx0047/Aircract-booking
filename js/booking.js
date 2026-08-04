@@ -119,7 +119,9 @@ const Booking = {
         const start = new Date(reservation.dateFrom);
         const end = new Date(reservation.dateTo);
         
-        const isOwnPending = currentUser && currentUser.id === reservation.pilotId && reservation.status === 'pending';
+        const isAdmin = currentUser && (currentUser.role === 'owner' || currentUser.role === 'deputy');
+        const isOwnCancellable = currentUser && currentUser.id === reservation.pilotId && reservation.status !== 'rejected';
+        const canCancel = isOwnCancellable || (isAdmin && reservation.status !== 'rejected');
         
         const statusMap = {
             'pending': 'Čakajúca',
@@ -142,9 +144,9 @@ const Booking = {
                     <p class="reservation-purpose"><strong>Účel:</strong> ${reservation.purpose}</p>
                     ${reservation.note ? `<p class="reservation-note"><strong>Poznámka:</strong> ${reservation.note}</p>` : ''}
                 </div>
-                ${isOwnPending ? `
+                ${canCancel ? `
                 <div class="reservation-footer">
-                    <button class="btn btn--danger btn--sm cancel-reservation-btn" data-id="${reservation.id}">Zrušiť</button>
+                    <button class="btn btn--danger btn--sm cancel-reservation-btn" data-id="${reservation.id}">Zrušiť rezerváciu</button>
                 </div>
                 ` : ''}
             </div>
@@ -240,12 +242,14 @@ const Booking = {
         if (index === -1) return { success: false, message: 'Rezervácia nenájdená.' };
         
         const reservation = reservations[index];
-        if (reservation.pilotId !== currentUser.id) {
+        const isAdmin = currentUser && (currentUser.role === 'owner' || currentUser.role === 'deputy');
+        const isOwner = currentUser && reservation.pilotId === currentUser.id;
+        
+        if (!isOwner && !isAdmin) {
             return { success: false, message: 'Nemáte oprávnenie zrušiť túto rezerváciu.' };
         }
-        
-        if (reservation.status !== 'pending') {
-            return { success: false, message: 'Je možné zrušiť iba čakajúce rezervácie.' };
+        if (reservation.status === 'rejected') {
+            return { success: false, message: 'Zamietnutá rezervácia sa nedá zrušiť.' };
         }
 
         reservations.splice(index, 1);
