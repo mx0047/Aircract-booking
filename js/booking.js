@@ -3,13 +3,11 @@ import VFR from './vfr.js';
 import Auth from './auth.js';
 
 const Booking = {
-    renderBookingForm(aircraftId, selectedDate = new Date(), hour = null) {
-        const aircraft = this.getAircraft(aircraftId);
-        if (!aircraft) return '<p>Lietadlo sa nenašlo.</p>';
+    renderBookingForm(aircraftId = null, selectedDate = new Date(), hour = null) {
+        const aircraft = aircraftId ? this.getAircraft(aircraftId) : null;
 
         let dateObj = selectedDate;
         if (typeof selectedDate === 'string') {
-            // Check if it's just a YYYY-MM-DD date and avoid timezone shift
             if (/^\d{4}-\d{2}-\d{2}$/.test(selectedDate)) {
                 dateObj = new Date(selectedDate + 'T00:00:00');
             } else {
@@ -30,14 +28,31 @@ const Booking = {
             timeToStr = `${nextHStr}:00`;
         }
         
-        return `
-            <div class="booking-form-container">
-                <h3 class="booking-title">Nová rezervácia</h3>
-                <div class="booking-aircraft-info">
+        let aircraftSelectorHtml = '';
+        if (aircraft) {
+            aircraftSelectorHtml = `
+                <div class="booking-aircraft-info" style="margin-bottom: 15px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
                     <strong>Lietadlo:</strong> ${aircraft.type} (${aircraft.registration})
                 </div>
+            `;
+        } else {
+            const activeFleet = DataStore.getFleet().filter(a => a.status === 'active');
+            aircraftSelectorHtml = `
+                <div class="form-group">
+                    <label for="booking-aircraft-id" class="form-label">Lietadlo</label>
+                    <select id="booking-aircraft-id" name="aircraftId" required class="form-input">
+                        ${activeFleet.map(a => `<option value="${a.id}">${a.type} (${a.registration})</option>`).join('')}
+                    </select>
+                </div>
+            `;
+        }
+        
+        return `
+            <div class="booking-form-container card card--glass" style="padding: 20px; max-width: 480px; margin: 0 auto;">
+                <h3 class="booking-title" style="margin-bottom: 20px; text-align: center;">Nová rezervácia</h3>
                 
-                <form id="booking-form" class="booking-form" data-aircraft-id="${aircraftId}">
+                <form id="booking-form" class="booking-form" data-aircraft-id="${aircraft ? aircraft.id : ''}">
+                    ${aircraftSelectorHtml}
                     <div class="form-group">
                         <label for="booking-date-from" class="form-label">Dátum od</label>
                         <input type="date" id="booking-date-from" name="dateFrom" required class="form-input" value="${dateStr}">
@@ -302,7 +317,11 @@ const Booking = {
             if (e.target.id === 'booking-form') {
                 e.preventDefault();
                 
-                const aircraftId = e.target.getAttribute('data-aircraft-id');
+                let aircraftId = e.target.getAttribute('data-aircraft-id');
+                if (!aircraftId) {
+                    const selectEl = document.getElementById('booking-aircraft-id');
+                    if (selectEl) aircraftId = selectEl.value;
+                }
                 const dateFrom = document.getElementById('booking-date-from').value;
                 const timeFrom = document.getElementById('booking-time-from').value;
                 const dateTo = document.getElementById('booking-date-to').value;
