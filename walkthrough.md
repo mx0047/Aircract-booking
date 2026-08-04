@@ -75,6 +75,7 @@ Aplikácia je plne pripravená na nasadenie na jedno kliknutie:
 | Miro Skuba | 3195 | Pilot | ✅ Aktívny |
 | Ivo Otáhal | 0000 | Pilot | ✅ Aktívny |
 | Miro Stašák | 0000 | Pilot | ✅ Aktívny |
+| Erik Čermák | 0000 | Pilot | ✅ Aktívny |
 
 ---
 
