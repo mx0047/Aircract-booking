@@ -48,14 +48,20 @@ const Calendar = {
                 const dateToInput = document.getElementById('booking-date-to');
                 const timeToInput = document.getElementById('booking-time-to');
                 
-                if (dateFromInput && timeFromInput && dateToInput && timeToInput) {
+                if (dateFromInput && dateToInput) {
                     dateFromInput.value = dateStr;
                     dateToInput.value = dateStr;
                     
                     const hStr = String(hour).padStart(2, '0');
-                    timeFromInput.value = `${hStr}:00`;
                     const nextHStr = String((hour + 1) % 24).padStart(2, '0');
-                    timeToInput.value = `${nextHStr}:00`;
+
+                    // Support both select-based and input-based time pickers
+                    const hFromSel = document.getElementById('booking-time-from-h');
+                    const mFromSel = document.getElementById('booking-time-from-m');
+                    const hToSel = document.getElementById('booking-time-to-h');
+                    const mToSel = document.getElementById('booking-time-to-m');
+                    if (hFromSel) { hFromSel.value = hStr; mFromSel.value = '00'; }
+                    if (hToSel) { hToSel.value = nextHStr; mToSel.value = '00'; }
                     
                     if (typeof Booking !== 'undefined' && Booking.updateVfrInfo) {
                         Booking.updateVfrInfo();
@@ -285,6 +291,21 @@ const Calendar = {
         return html;
     },
 
+    buildTimeSelectHtml(idPrefix, defaultTime) {
+        const [defH, defM] = (defaultTime || '08:00').split(':');
+        const mins = ['00','05','10','15','20','25','30','35','40','45','50','55'];
+        const hourOpts = Array.from({length: 24}, (_, i) => {
+            const v = String(i).padStart(2, '0');
+            return `<option value="${v}"${v === defH ? ' selected' : ''}>${v}</option>`;
+        }).join('');
+        const minOpts = mins.map(m => `<option value="${m}"${m === (defM || '00') ? ' selected' : ''}>${m}</option>`).join('');
+        return `
+            <select id="${idPrefix}-h" class="form-input" style="width: 60px; padding: 8px 4px; font-size: 1rem; text-align: center;">${hourOpts}</select>
+            <span style="font-weight:700;font-size:1.1rem;color:var(--color-text-primary);align-self:center;padding:0 2px;">:</span>
+            <select id="${idPrefix}-m" class="form-input" style="width: 60px; padding: 8px 4px; font-size: 1rem; text-align: center;">${minOpts}</select>
+        `;
+    },
+
     renderCalendarScreen(aircraftId) {
         if (aircraftId) currentAircraftId = aircraftId;
         const year = currentDate.getFullYear();
@@ -312,16 +333,16 @@ const Calendar = {
                         <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px;">
                             <div>
                                 <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Odlet (Vzlet)</label>
-                                <div style="display: grid; grid-template-columns: 1fr auto; gap: 6px;">
+                                <div style="display: grid; grid-template-columns: 1fr auto auto auto; gap: 6px; align-items: center;">
                                     <input type="date" id="booking-date-from" required class="form-input" value="${dateStr}" style="padding: 8px 10px; font-size: 0.9rem;">
-                                    <input type="time" id="booking-time-from" required step="300" class="form-input" value="${timeFrom}" style="padding: 8px 10px; font-size: 0.9rem; width: 100px;">
+                                    ${this.buildTimeSelectHtml('booking-time-from', '08:00')}
                                 </div>
                             </div>
                             <div>
                                 <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Prílet (Pristátie)</label>
-                                <div style="display: grid; grid-template-columns: 1fr auto; gap: 6px;">
+                                <div style="display: grid; grid-template-columns: 1fr auto auto auto; gap: 6px; align-items: center;">
                                     <input type="date" id="booking-date-to" required class="form-input" value="${dateStr}" style="padding: 8px 10px; font-size: 0.9rem;">
-                                    <input type="time" id="booking-time-to" required step="300" class="form-input" value="${timeTo}" style="padding: 8px 10px; font-size: 0.9rem; width: 100px;">
+                                    ${this.buildTimeSelectHtml('booking-time-to', '10:00')}
                                 </div>
                             </div>
                         </div>
