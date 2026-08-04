@@ -83,13 +83,12 @@ const Admin = {
         return `
             <div class="admin__pending-list">
                 ${pending.map(r => {
-                    const user = DataStore.getUsers().find(u => u.id === r.userId);
-                    const aircraft = DataStore.getAircraft().find(a => a.id === r.aircraftId);
+                    const aircraft = DataStore.getFleet().find(a => a.id === r.aircraftId);
                     
                     return `
                     <div class="admin__pending-card card" data-id="${r.id}">
                         <div class="card__header">
-                            <h4 class="card__title">${user ? user.name : 'Neznámy pilot'}</h4>
+                            <h4 class="card__title">${r.pilotName || 'Neznámy pilot'}</h4>
                             <span class="card__subtitle">${aircraft ? aircraft.type + ' ' + aircraft.registration : 'Neznáme lietadlo'}</span>
                         </div>
                         <div class="card__body">
@@ -178,7 +177,7 @@ const Admin = {
     },
 
     renderFleetManagement() {
-        const fleet = DataStore.getAircraft();
+        const fleet = DataStore.getFleet();
         
         return `
             <div class="admin__section">
@@ -243,7 +242,7 @@ const Admin = {
     },
 
     revokeUser(id) {
-        DataStore.updateUser(id, { status: 'inactive' });
+        DataStore.updateUser(id, { status: 'inactive', approved: false });
         window.dispatchEvent(new CustomEvent('user-updated'));
     },
     
@@ -275,7 +274,7 @@ const Admin = {
             
             // Approve reservation
             if (e.target.closest('.admin__btn-approve-res')) {
-                const id = parseInt(e.target.closest('.admin__btn-approve-res').dataset.id);
+                const id = e.target.closest('.admin__btn-approve-res').dataset.id;
                 this.approveReservation(id);
             }
             
@@ -296,7 +295,7 @@ const Admin = {
             
             // Confirm reject
             if (e.target.closest('.admin__btn-confirm-reject')) {
-                const id = parseInt(e.target.closest('.admin__btn-confirm-reject').dataset.id);
+                const id = e.target.closest('.admin__btn-confirm-reject').dataset.id;
                 const reason = document.getElementById(`reject-reason-${id}`).value;
                 if (reason.trim() === '') {
                     alert('Prosím, zadajte dôvod zamietnutia.');
@@ -307,13 +306,13 @@ const Admin = {
             
             // Approve user
             if (e.target.closest('.admin__btn-approve-user')) {
-                const id = parseInt(e.target.closest('.admin__btn-approve-user').dataset.id);
+                const id = e.target.closest('.admin__btn-approve-user').dataset.id;
                 this.approveUser(id);
             }
             
             // Reject user
             if (e.target.closest('.admin__btn-reject-user')) {
-                const id = parseInt(e.target.closest('.admin__btn-reject-user').dataset.id);
+                const id = e.target.closest('.admin__btn-reject-user').dataset.id;
                 if (confirm('Naozaj chcete zamietnuť tohto používateľa?')) {
                     this.rejectUser(id);
                 }
@@ -322,7 +321,7 @@ const Admin = {
             // Toggle user status
             if (e.target.closest('.admin__btn-toggle-user')) {
                 const btn = e.target.closest('.admin__btn-toggle-user');
-                const id = parseInt(btn.dataset.id);
+                const id = btn.dataset.id;
                 const status = btn.dataset.status;
                 
                 if (status === 'active') {
@@ -336,7 +335,7 @@ const Admin = {
             
             // Remove aircraft
             if (e.target.closest('.admin__btn-remove-aircraft')) {
-                const id = parseInt(e.target.closest('.admin__btn-remove-aircraft').dataset.id);
+                const id = e.target.closest('.admin__btn-remove-aircraft').dataset.id;
                 if (confirm('Naozaj chcete odstrániť toto lietadlo?')) {
                     this.removeAircraft(id);
                 }
