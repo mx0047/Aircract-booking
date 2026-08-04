@@ -93,14 +93,24 @@ const App = {
             }
         });
 
-        // Initial Route
-        if (Auth.isLoggedIn()) {
-            this.navigateTo('dashboard');
-        } else {
-            this.navigateTo('login');
-        }
-        
-        this.setupNavigationListeners();
+        // Initial Route - Load server data first
+        DataStore.load().then(() => {
+            if (Auth.isLoggedIn()) {
+                this.navigateTo('dashboard');
+            } else {
+                this.navigateTo('login');
+            }
+            this.setupNavigationListeners();
+        }).catch(err => {
+            console.error('Failed to load startup data:', err);
+            // Fallback to local
+            if (Auth.isLoggedIn()) {
+                this.navigateTo('dashboard');
+            } else {
+                this.navigateTo('login');
+            }
+            this.setupNavigationListeners();
+        });
     },
 
     setupNavigationListeners() {
@@ -137,9 +147,18 @@ const App = {
         });
     },
 
-    navigateTo(screen, params = null) {
+    async navigateTo(screen, params = null) {
         if (!Auth.isLoggedIn() && screen !== 'login') {
             screen = 'login';
+        }
+
+        // Fetch latest data from server on every navigation to sync other users' bookings
+        if (screen !== 'login') {
+            try {
+                await DataStore.load();
+            } catch (e) {
+                console.warn('Could not sync data before navigation, rendering cached:', e);
+            }
         }
 
         const prevScreen = this.currentScreen;
