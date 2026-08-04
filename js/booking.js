@@ -262,6 +262,23 @@ const Booking = {
         return fleet.find(a => a.id === id);
     },
 
+    parseDateTime(dateStr, timeStr) {
+        if (!dateStr || !timeStr) return new Date(NaN);
+        const dateParts = dateStr.split('-');
+        const timeParts = timeStr.split(':');
+        if (dateParts.length === 3 && timeParts.length >= 2) {
+            return new Date(
+                parseInt(dateParts[0], 10),
+                parseInt(dateParts[1], 10) - 1,
+                parseInt(dateParts[2], 10),
+                parseInt(timeParts[0], 10),
+                parseInt(timeParts[1], 10),
+                0
+            );
+        }
+        return new Date(`${dateStr}T${timeStr}`);
+    },
+
     updateVfrInfo() {
         const dateInput = document.getElementById('booking-date-from');
         const vfrDisplay = document.getElementById('vfr-info-display');
@@ -291,8 +308,8 @@ const Booking = {
                 const dateTo = document.getElementById('booking-date-to').value;
                 const timeTo = document.getElementById('booking-time-to').value;
                 
-                const start = new Date(`${dateFrom}T${timeFrom}`);
-                const end = new Date(`${dateTo}T${timeTo}`);
+                const start = this.parseDateTime(dateFrom, timeFrom);
+                const end = this.parseDateTime(dateTo, timeTo);
                 
                 const data = {
                     aircraftId,
