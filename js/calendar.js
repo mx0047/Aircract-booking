@@ -214,7 +214,7 @@ const Calendar = {
             
             html += `
                 <div class="timeline__hour">
-                    <div class="timeline__hour-label">${String(hour).padStart(2, '0')}:00</div>
+                    <div class="timeline__time-label">${String(hour).padStart(2, '0')}:00</div>
                     <div class="timeline__slot ${slotClass}" data-hour="${hour}">
             `;
 
