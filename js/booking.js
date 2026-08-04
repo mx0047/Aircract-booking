@@ -56,14 +56,14 @@ const Booking = {
                 
                 <form id="booking-form" class="booking-form" data-aircraft-id="${aircraft ? aircraft.id : ''}">
                     ${aircraftSelectorHtml}
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px;">
                         <div>
                             <label for="booking-datetime-from" class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Odlet (Vzlet)</label>
-                            <input type="datetime-local" id="booking-datetime-from" name="dateFrom" required class="form-input" value="${defFrom}" style="padding: 8px 10px; font-size: 0.9rem;">
+                            <input type="datetime-local" id="booking-datetime-from" name="dateFrom" required class="form-input" value="${defFrom}" style="padding: 8px 10px; font-size: 0.9rem; width: 100%;">
                         </div>
                         <div>
                             <label for="booking-datetime-to" class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Prílet (Pristátie)</label>
-                            <input type="datetime-local" id="booking-datetime-to" name="dateTo" required class="form-input" value="${defTo}" style="padding: 8px 10px; font-size: 0.9rem;">
+                            <input type="datetime-local" id="booking-datetime-to" name="dateTo" required class="form-input" value="${defTo}" style="padding: 8px 10px; font-size: 0.9rem; width: 100%;">
                         </div>
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
