@@ -3,11 +3,32 @@ import VFR from './vfr.js';
 import Auth from './auth.js';
 
 const Booking = {
-    renderBookingForm(aircraftId, selectedDate = new Date()) {
+    renderBookingForm(aircraftId, selectedDate = new Date(), hour = null) {
         const aircraft = this.getAircraft(aircraftId);
         if (!aircraft) return '<p>Lietadlo sa nenašlo.</p>';
 
-        const dateStr = selectedDate.toISOString().split('T')[0];
+        let dateObj = selectedDate;
+        if (typeof selectedDate === 'string') {
+            // Check if it's just a YYYY-MM-DD date and avoid timezone shift
+            if (/^\d{4}-\d{2}-\d{2}$/.test(selectedDate)) {
+                dateObj = new Date(selectedDate + 'T00:00:00');
+            } else {
+                dateObj = new Date(selectedDate);
+            }
+        }
+        if (!(dateObj instanceof Date) || isNaN(dateObj.getTime())) {
+            dateObj = new Date();
+        }
+        const dateStr = dateObj.toISOString().split('T')[0];
+        
+        let timeFromStr = '';
+        let timeToStr = '';
+        if (hour !== null && hour !== undefined) {
+            const hStr = String(hour).padStart(2, '0');
+            timeFromStr = `${hStr}:00`;
+            const nextHStr = String((parseInt(hour) + 1) % 24).padStart(2, '0');
+            timeToStr = `${nextHStr}:00`;
+        }
         
         return `
             <div class="booking-form-container">
@@ -23,7 +44,7 @@ const Booking = {
                     </div>
                     <div class="form-group">
                         <label for="booking-time-from" class="form-label">Čas od</label>
-                        <input type="time" id="booking-time-from" name="timeFrom" required step="300" class="form-input">
+                        <input type="time" id="booking-time-from" name="timeFrom" required step="300" class="form-input" value="${timeFromStr}">
                     </div>
                     <div class="form-group">
                         <label for="booking-date-to" class="form-label">Dátum do</label>
@@ -31,7 +52,7 @@ const Booking = {
                     </div>
                     <div class="form-group">
                         <label for="booking-time-to" class="form-label">Čas do</label>
-                        <input type="time" id="booking-time-to" name="timeTo" required step="300" class="form-input">
+                        <input type="time" id="booking-time-to" name="timeTo" required step="300" class="form-input" value="${timeToStr}">
                     </div>
                     <div class="form-group">
                         <label for="booking-purpose" class="form-label">Účel letu</label>
