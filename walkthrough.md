@@ -73,6 +73,8 @@ Aplikácia je plne pripravená na nasadenie na jedno kliknutie:
 | Martin Smejkal | 9999 | Zástupca (admin) | ✅ Aktívny |
 | Martin Otáhal | 1234 | Pilot | ✅ Aktívny |
 | Miro Skuba | 3195 | Pilot | ✅ Aktívny |
+| Ivo Otáhal | 0000 | Pilot | ✅ Aktívny |
+| Miro Stašák | 0000 | Pilot | ✅ Aktívny |
 
 ---
 
