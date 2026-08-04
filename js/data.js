@@ -6,7 +6,8 @@ const defaultUsers = [
     { id: 'u3', name: 'Martin Otáhal', role: 'pilot', pin: '1234', approved: true, status: 'active' },
     { id: 'u5', name: 'Miro Skuba', role: 'pilot', pin: '3195', approved: true, status: 'active' },
     { id: 'u6', name: 'Ivo Otáhal', role: 'pilot', pin: '0000', approved: true, status: 'active' },
-    { id: 'u7', name: 'Miro Stašák', role: 'pilot', pin: '0000', approved: true, status: 'active' }
+    { id: 'u7', name: 'Miro Stašák', role: 'pilot', pin: '0000', approved: true, status: 'active' },
+    { id: 'u8', name: 'Erik Čermák', role: 'pilot', pin: '0000', approved: true, status: 'active' }
 ];
 
 const defaultFleet = [
@@ -74,6 +75,13 @@ class DataStoreImpl {
             updated = true;
         }
 
+        // Migration: ensure Erik Čermák exists
+        const hasErik = this.users.some(u => u.name === 'Erik Čermák');
+        if (!hasErik) {
+            this.users.push({ id: 'u8', name: 'Erik Čermák', role: 'pilot', pin: '0000', approved: true, status: 'active' });
+            updated = true;
+        }
+
         this.users.forEach(u => {
             if (!u.status) {
                 u.status = u.approved ? 'active' : 'pending';
@@ -119,6 +127,13 @@ class DataStoreImpl {
                 const hasMiroStasak = this.users.some(u => u.name === 'Miro Stašák');
                 if (!hasMiroStasak) {
                     this.users.push({ id: 'u7', name: 'Miro Stašák', role: 'pilot', pin: '0000', approved: true, status: 'active' });
+                    wasMigrated = true;
+                }
+
+                // Migration: ensure Erik Čermák exists
+                const hasErik = this.users.some(u => u.name === 'Erik Čermák');
+                if (!hasErik) {
+                    this.users.push({ id: 'u8', name: 'Erik Čermák', role: 'pilot', pin: '0000', approved: true, status: 'active' });
                     wasMigrated = true;
                 }
 
