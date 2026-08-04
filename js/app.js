@@ -358,13 +358,17 @@ const App = {
         if (DataStore.getReservationsByPilot) {
             const myRes = DataStore.getReservationsByPilot(user.id);
             const now = new Date().getTime();
-            const upcoming = myRes.filter(r => new Date(r.dateFrom).getTime() > now && r.status !== 'rejected');
-            
-            upcoming.sort((a, b) => new Date(a.dateFrom).getTime() - new Date(b.dateFrom).getTime());
-            
-            myReservationsCount = upcoming.length;
-            if (upcoming.length > 0) {
-                nextReservation = upcoming[0];
+            const myUpcoming = myRes.filter(r => new Date(r.dateFrom).getTime() > now && r.status !== 'rejected');
+            myReservationsCount = myUpcoming.length;
+        }
+
+        if (DataStore.getReservations) {
+            const allRes = DataStore.getReservations();
+            const now = new Date().getTime();
+            const allUpcoming = allRes.filter(r => new Date(r.dateFrom).getTime() > now && r.status !== 'rejected');
+            allUpcoming.sort((a, b) => new Date(a.dateFrom).getTime() - new Date(b.dateFrom).getTime());
+            if (allUpcoming.length > 0) {
+                nextReservation = allUpcoming[0];
             }
         }
         
@@ -375,11 +379,15 @@ const App = {
             const start = new Date(nextReservation.dateFrom);
             const ac = DataStore.getFleet ? DataStore.getFleet().find(a => a.id === nextReservation.aircraftId) : null;
             const acName = ac ? `${ac.type} ${ac.registration}` : 'Neznáme lietadlo';
+            const pilotName = nextReservation.pilotName || 'Pilot';
             
             nextResHtml = `
                 <div class="next-reservation-card">
                     <h4>${acName}</h4>
-                    <p>${start.toLocaleDateString('sk-SK')} o ${start.toLocaleTimeString('sk-SK', {hour:'2-digit', minute:'2-digit'})}</p>
+                    <p style="margin-bottom: 6px; font-size: 0.9rem; color: var(--color-text-secondary);">
+                        <strong>Pilot:</strong> ${pilotName}
+                    </p>
+                    <p style="margin-bottom: 8px;">${start.toLocaleDateString('sk-SK')} o ${start.toLocaleTimeString('sk-SK', {hour:'2-digit', minute:'2-digit'})}</p>
                     <span class="badge badge-${nextReservation.status}">${nextReservation.status === 'approved' ? 'Schválená' : 'Čakajúca'}</span>
                 </div>
             `;
