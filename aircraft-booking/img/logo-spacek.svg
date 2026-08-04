@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 100" fill="#1B3B6F">
+  <!-- Stylized aircraft above Š -->
+  <g>
+    <!-- Main aircraft body / arrow -->
+    <polygon points="10,32 85,18 95,22 30,38"/>
+    <!-- Wing sweep -->
+    <polygon points="50,28 110,10 115,14 55,34"/>
+    <!-- Tail accent -->
+    <polygon points="12,30 8,22 30,26"/>
+  </g>
+  
+  <!-- ŠPAČEK text -->
+  <text x="5" y="82" font-family="Arial Black, Arial, Helvetica, sans-serif" font-weight="900" font-size="56" letter-spacing="3" fill="#1B3B6F">
+    <tspan>ŠPAČEK</tspan>
+  </text>
+</svg>
