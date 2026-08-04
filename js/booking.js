@@ -135,8 +135,8 @@ const Booking = {
                 </div>
                 <div class="reservation-body">
                     <p class="reservation-time">
-                        ${start.toLocaleDateString('sk-SK')} ${start.toLocaleTimeString('sk-SK', {hour: '2-digit', minute:'2-digit'})} - 
-                        ${end.toLocaleDateString('sk-SK')} ${end.toLocaleTimeString('sk-SK', {hour: '2-digit', minute:'2-digit'})}
+                        ${start.toLocaleDateString('sk-SK')} ${start.toLocaleTimeString('sk-SK', {hour: '2-digit', minute:'2-digit', hour12: false})} - 
+                        ${end.toLocaleDateString('sk-SK')} ${end.toLocaleTimeString('sk-SK', {hour: '2-digit', minute:'2-digit', hour12: false})}
                     </p>
                     <p class="reservation-pilot"><strong>Pilot:</strong> ${reservation.pilotName || 'Neznámy'}</p>
                     <p class="reservation-purpose"><strong>Účel:</strong> ${reservation.purpose}</p>
