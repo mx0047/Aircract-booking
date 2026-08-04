@@ -308,8 +308,8 @@ const Booking = {
                 const dateTo = document.getElementById('booking-date-to').value;
                 const timeTo = document.getElementById('booking-time-to').value;
                 
-                const start = this.parseDateTime(dateFrom, timeFrom);
-                const end = this.parseDateTime(dateTo, timeTo);
+                const start = Booking.parseDateTime(dateFrom, timeFrom);
+                const end = Booking.parseDateTime(dateTo, timeTo);
                 
                 const data = {
                     aircraftId,
@@ -319,7 +319,7 @@ const Booking = {
                     note: document.getElementById('booking-note').value
                 };
                 
-                const result = this.createReservation(data);
+                const result = Booking.createReservation(data);
                 if (result.success) {
                     Auth.showToast(result.message, 'success');
                     window.dispatchEvent(new CustomEvent('reservation-created'));
@@ -333,7 +333,7 @@ const Booking = {
             if (e.target.classList.contains('cancel-reservation-btn')) {
                 const id = e.target.getAttribute('data-id');
                 if (confirm('Naozaj chcete zrušiť túto rezerváciu?')) {
-                    const result = this.cancelReservation(id);
+                    const result = Booking.cancelReservation(id);
                     if (result.success) {
                         Auth.showToast(result.message, 'success');
                         window.dispatchEvent(new CustomEvent('reservation-cancelled'));
@@ -346,7 +346,7 @@ const Booking = {
         
         document.body.addEventListener('change', (e) => {
             if (e.target.id === 'booking-date-from') {
-                this.updateVfrInfo();
+                Booking.updateVfrInfo();
                 // Optionally auto-set date-to
                 const dateTo = document.getElementById('booking-date-to');
                 if (dateTo && !dateTo.value) {
