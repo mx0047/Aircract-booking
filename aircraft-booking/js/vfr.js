@@ -96,12 +96,14 @@ const VFR = {
     },
 
     isTimeRangeInVfr(startTime, endTime) {
-        const w1 = this.getVfrWindow(startTime);
-        if (!w1.vfrStart || !w1.vfrEnd) return false;
+        const wStart = this.getVfrWindow(startTime);
+        const wEnd = this.getVfrWindow(endTime);
+        if (!wStart.vfrStart || !wStart.vfrEnd || !wEnd.vfrStart || !wEnd.vfrEnd) return false;
         
-        // Ensure both times fall entirely within a single day's VFR window.
-        // If a flight spans multiple days, it will contain night time.
-        return startTime >= w1.vfrStart && endTime <= w1.vfrEnd;
+        const startValid = startTime >= wStart.vfrStart && startTime <= wStart.vfrEnd;
+        const endValid = endTime >= wEnd.vfrStart && endTime <= wEnd.vfrEnd;
+        
+        return startValid && endValid;
     },
     
     getVfrWindowsForDateRange(startDate, endDate) {
