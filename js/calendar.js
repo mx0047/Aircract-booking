@@ -1,5 +1,6 @@
 import DataStore from './data.js';
 import VFR from './vfr.js';
+import Booking from './booking.js';
 
 let currentDate = new Date();
 let selectedDate = new Date();
@@ -41,19 +42,40 @@ const Calendar = {
             if (!e.target.closest('.timeline__booking')) {
                 const hour = parseInt(slotEl.dataset.hour, 10);
                 const dateStr = this.formatDateStr(selectedDate);
-                document.dispatchEvent(new CustomEvent('create-booking', {
-                    detail: { aircraftId: currentAircraftId, date: dateStr, hour }
-                }));
+                
+                const dateFromInput = document.getElementById('booking-date-from');
+                const timeFromInput = document.getElementById('booking-time-from');
+                const dateToInput = document.getElementById('booking-date-to');
+                const timeToInput = document.getElementById('booking-time-to');
+                
+                if (dateFromInput && timeFromInput && dateToInput && timeToInput) {
+                    dateFromInput.value = dateStr;
+                    dateToInput.value = dateStr;
+                    
+                    const hStr = String(hour).padStart(2, '0');
+                    timeFromInput.value = `${hStr}:00`;
+                    const nextHStr = String((hour + 1) % 24).padStart(2, '0');
+                    timeToInput.value = `${nextHStr}:00`;
+                    
+                    if (typeof Booking !== 'undefined' && Booking.updateVfrInfo) {
+                        Booking.updateVfrInfo();
+                    }
+                    
+                    const formContainer = document.querySelector('.quick-booking');
+                    if (formContainer) {
+                        formContainer.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
             }
         }
 
         // Add button
         const addBtn = e.target.closest('.timeline__add-btn');
-        if (addBtn && currentAircraftId) {
-            const dateStr = this.formatDateStr(selectedDate);
-            document.dispatchEvent(new CustomEvent('create-booking', {
-                detail: { aircraftId: currentAircraftId, date: dateStr }
-            }));
+        if (addBtn) {
+            const formContainer = document.querySelector('.quick-booking');
+            if (formContainer) {
+                formContainer.scrollIntoView({ behavior: 'smooth' });
+            }
         }
     },
 
@@ -61,6 +83,9 @@ const Calendar = {
         const container = document.querySelector('#screen-calendar');
         if (container && currentAircraftId) {
             container.innerHTML = this.renderCalendarScreen(currentAircraftId);
+            if (typeof Booking !== 'undefined' && Booking.updateVfrInfo) {
+                Booking.updateVfrInfo();
+            }
         }
     },
 
@@ -264,10 +289,61 @@ const Calendar = {
         if (aircraftId) currentAircraftId = aircraftId;
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
+        const dateStr = this.formatDateStr(selectedDate);
+        
+        const aircraft = DataStore.getFleet().find(a => a.id === currentAircraftId);
+        const reg = aircraft ? aircraft.registration : '';
+        const type = aircraft ? aircraft.type : '';
+
+        // Default times
+        const timeFrom = "08:00";
+        const timeTo = "10:00";
 
         return `
             <div class="calendar-screen">
                 ${this.renderMonthView(year, month, currentAircraftId)}
+                
+                <!-- Quick Booking Form Box -->
+                <div class="quick-booking card card--glass" style="margin: 15px; padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                        ✈️ Rýchla rezervácia (${type} ${reg})
+                    </h3>
+                    <form id="booking-form" class="booking-form" data-aircraft-id="${currentAircraftId}">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                            <div>
+                                <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Dátum od</label>
+                                <input type="date" id="booking-date-from" required class="form-input" value="${dateStr}" style="padding: 8px 10px; font-size: 0.9rem;">
+                            </div>
+                            <div>
+                                <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Čas od</label>
+                                <input type="time" id="booking-time-from" required step="300" class="form-input" value="${timeFrom}" style="padding: 8px 10px; font-size: 0.9rem;">
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                            <div>
+                                <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Dátum do</label>
+                                <input type="date" id="booking-date-to" required class="form-input" value="${dateStr}" style="padding: 8px 10px; font-size: 0.9rem;">
+                            </div>
+                            <div>
+                                <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Čas do</label>
+                                <input type="time" id="booking-time-to" required step="300" class="form-input" value="${timeTo}" style="padding: 8px 10px; font-size: 0.9rem;">
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Účel letu</label>
+                            <input type="text" id="booking-purpose" required class="form-input" placeholder="napr. Výcvik, Výlet" style="padding: 8px 10px; font-size: 0.9rem;">
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Poznámka (nepovinné)</label>
+                            <input type="text" id="booking-note" class="form-input" placeholder="Poznámka..." style="padding: 8px 10px; font-size: 0.9rem;">
+                        </div>
+                        
+                        <div id="vfr-info-display" style="font-size: 0.8rem; color: var(--color-accent); margin-bottom: 10px; display: none;"></div>
+                        
+                        <button type="submit" class="btn btn-primary btn-block" style="padding: 10px;">Odoslať žiadosť</button>
+                    </form>
+                </div>
+                
                 ${this.renderDayTimeline(selectedDate, currentAircraftId)}
             </div>
         `;
