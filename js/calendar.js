@@ -218,7 +218,7 @@ const Calendar = {
                     <div class="timeline__slot ${slotClass}" data-hour="${hour}">
             `;
 
-            // Sunrise/Sunset markers
+            // Sunrise/Sunset markers (stay inside slot)
             if (hour === Math.floor(sr)) {
                 const fm = (Math.floor((sr % 1) * 60)).toString().padStart(2, '0');
                 html += `<div class="timeline__sunrise-marker" style="top: ${(sr % 1) * 100}%"><span>☀️ Východ ${Math.floor(sr)}:${fm}</span></div>`;
@@ -228,58 +228,36 @@ const Calendar = {
                 html += `<div class="timeline__sunset-marker" style="top: ${(ss % 1) * 100}%"><span>🌙 Západ ${Math.floor(ss)}:${fm}</span></div>`;
             }
 
-            // Render bookings overlay
+            html += `</div>`; // close slot
+
+            // Render each booking as ONE continuous block — only in the start hour
             bookings.forEach(b => {
                 const bStart = new Date(b.dateFrom);
-                const bEnd = new Date(b.dateTo);
-                const bStartHours = bStart.getHours() + bStart.getMinutes()/60;
-                const bEndHours = bEnd.getHours() + bEnd.getMinutes()/60;
-                
+                const bEnd   = new Date(b.dateTo);
+                const bStartH = bStart.getHours() + bStart.getMinutes() / 60;
+                const bEndH   = bEnd.getHours()   + bEnd.getMinutes()   / 60;
+
+                if (Math.floor(bStartH) !== hour) return; // only render in the booking's start hour
+
                 const formatT = (d) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-                const bStartTime = formatT(bStart);
-                const bEndTime = formatT(bEnd);
-                
-                if ((hour === Math.floor(bStartHours)) || (hour > bStartHours && hour < bEndHours)) {
-                    let top = 0;
-                    let height = 100;
-                    let renderContent = false;
-                    
-                    if (hour === Math.floor(bStartHours)) {
-                        top = (bStartHours % 1) * 100;
-                        height = 100 - top;
-                        renderContent = true;
-                        
-                        if (Math.floor(bEndHours) === hour) {
-                            height = (bEndHours - bStartHours) * 100;
-                        }
-                    } else if (hour === Math.floor(bEndHours)) {
-                        height = (bEndHours % 1) * 100;
-                    }
 
-                    const isOwn = currentUser && b.pilotId === currentUser.id;
-                    const statusClass = b.status === 'pending' ? 'timeline__booking--pending' : 'timeline__booking--approved';
-                    const ownClass = isOwn ? 'timeline__booking--own' : '';
+                const topPct    = (bStartH % 1) * 100;          // offset within the start hour (0-100%)
+                const heightPct = (bEndH - bStartH) * 100;       // spans N hours → N×100% of 60px
 
-                    if (renderContent) {
-                        html += `
-                            <div class="timeline__booking ${statusClass} ${ownClass}" style="top: ${top}%; height: ${height}%">
-                                <span class="timeline__booking-title">${b.pilotName || 'Pilot'}</span>
-                                <span class="timeline__booking-time">${bStartTime} - ${bEndTime}</span>
-                            </div>
-                        `;
-                    } else {
-                        html += `
-                            <div class="timeline__booking ${statusClass} ${ownClass}" style="top: ${top}%; height: ${height}%; border-top: none;">
-                            </div>
-                        `;
-                    }
-                }
+                const isOwn = currentUser && b.pilotId === currentUser.id;
+                const statusClass = b.status === 'pending' ? 'timeline__booking--pending' : 'timeline__booking--approved';
+                const ownClass    = isOwn ? 'timeline__booking--own' : '';
+
+                html += `
+                    <div class="timeline__booking ${statusClass} ${ownClass}"
+                         style="top: ${topPct}%; height: ${heightPct}%; z-index: 5; min-height: 22px;">
+                        <span class="timeline__booking-title">${b.pilotName || 'Pilot'}</span>
+                        <span class="timeline__booking-time">${formatT(bStart)} - ${formatT(bEnd)}</span>
+                    </div>
+                `;
             });
 
-            html += `
-                    </div>
-                </div>
-            `;
+            html += `</div>`; // close timeline__hour
         }
 
         html += `
