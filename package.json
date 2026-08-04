@@ -1,0 +1,13 @@
+{
+  "name": "aircraft-booking",
+  "version": "1.0.0",
+  "description": "Rezervačný systém lietadiel Špaček SD-1 a SD-2",
+  "main": "api/index.js",
+  "scripts": {
+    "start": "node api/index.js",
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
