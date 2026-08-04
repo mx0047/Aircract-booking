@@ -132,6 +132,8 @@ const App = {
                 if (action === 'logout') {
                     Auth.logout();
                     this.navigateTo('login');
+                } else if (action === 'profile') {
+                    this.showProfileModal();
                 } else if (action === 'navigate') {
                     const screen = actionBtn.dataset.target;
                     this.navigateTo(screen);
@@ -285,7 +287,10 @@ const App = {
                     <span class="header__title">SD Planes</span>
                 </div>
                 <div style="display:flex; align-items:center; gap: 10px;">
-                    <span class="header__subtitle">${user ? user.name : ''}</span>
+                    <button class="header__action" data-action="profile" title="Môj profil" style="display: flex; align-items: center; justify-content: center; background: transparent; border: none; padding: 4px; color: var(--color-text-secondary); cursor: pointer; border-radius: 50%;">
+                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    </button>
+                    <span class="header__subtitle" style="font-weight: 500;">${user ? user.name : ''}</span>
                     <button class="header__action" data-action="logout" title="Odhlásiť sa">
                         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                     </button>
@@ -581,6 +586,85 @@ const App = {
                 });
             }
         });
+    },
+
+    showProfileModal() {
+        const user = Auth.getCurrentUser();
+        if (!user) return;
+
+        this.showModal({
+            title: 'Môj profil',
+            content: `
+                <form id="profile-edit-form" style="display: flex; flex-direction: column; gap: 15px; margin-top: 10px;">
+                    <div>
+                        <label class="form-label" style="font-size: 0.85rem; margin-bottom: 4px; display:block;">Meno a priezvisko</label>
+                        <input type="text" id="profile-edit-name" required value="${user.name}" class="form-input" style="padding: 8px 10px; font-size: 0.95rem; width: 100%;">
+                    </div>
+                    <div>
+                        <label class="form-label" style="font-size: 0.85rem; margin-bottom: 4px; display:block;">Nový PIN (4 číslice, nechajte prázdne pre zachovanie)</label>
+                        <input type="password" id="profile-edit-pin" pattern="\\d{4}" maxlength="4" placeholder="Ponechať bez zmeny" class="form-input" style="padding: 8px 10px; font-size: 0.95rem; width: 100%;">
+                    </div>
+                    <div>
+                        <label class="form-label" style="font-size: 0.85rem; margin-bottom: 4px; display:block;">Potvrdiť nový PIN</label>
+                        <input type="password" id="profile-edit-pin-confirm" pattern="\\d{4}" maxlength="4" placeholder="Ponechať bez zmeny" class="form-input" style="padding: 8px 10px; font-size: 0.95rem; width: 100%;">
+                    </div>
+                    <button type="submit" class="btn btn--primary btn--full" style="padding: 10px; font-size: 1rem; margin-top: 5px;">Uložiť zmeny</button>
+                </form>
+            `,
+            actions: []
+        });
+
+        // Setup submit event listener for profile-edit-form
+        const form = document.getElementById('profile-edit-form');
+        if (form) {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const newName = document.getElementById('profile-edit-name').value.trim();
+                const newPin = document.getElementById('profile-edit-pin').value;
+                const newPinConfirm = document.getElementById('profile-edit-pin-confirm').value;
+
+                if (newName.length < 2) {
+                    this.showToast('Meno a priezvisko musí mať aspoň 2 znaky.', 'error');
+                    return;
+                }
+
+                // Check duplicate name
+                const otherUser = DataStore.getUsers().find(u => u.name.toLowerCase() === newName.toLowerCase() && u.id !== user.id);
+                if (otherUser) {
+                    this.showToast('Používateľ s týmto menom už existuje.', 'error');
+                    return;
+                }
+
+                let pinToUpdate = user.pin;
+                if (newPin || newPinConfirm) {
+                    if (newPin !== newPinConfirm) {
+                        this.showToast('Zadané PIN kódy sa nezhodujú.', 'error');
+                        return;
+                    }
+                    if (!/^\d{4}$/.test(newPin)) {
+                        this.showToast('PIN kód musí obsahovať presne 4 číslice.', 'error');
+                        return;
+                    }
+                    pinToUpdate = newPin;
+                }
+
+                // Save update
+                const updatedUser = { ...user, name: newName, pin: pinToUpdate };
+                DataStore.updateUser(user.id, { name: newName, pin: pinToUpdate });
+                sessionStorage.setItem('currentUser', JSON.stringify(updatedUser));
+                
+                this.showToast('Údaje úspešne zmenené.', 'success');
+                
+                // Close modal
+                const modalContainer = document.getElementById('modal-container');
+                if (modalContainer) modalContainer.innerHTML = '';
+
+                // Refresh app shell to show new name in header
+                this.renderHeader();
+                this.refreshCurrentScreen();
+            });
+        }
+    }
     }
 };
 
