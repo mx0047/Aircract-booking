@@ -1,10 +1,10 @@
 const PREFIX = 'aircraft-booking-';
 
 const defaultUsers = [
-    { id: 'u1', name: 'Igor Špaček', role: 'owner', pin: '0000', approved: true },
-    { id: 'u2', name: 'Mária Kováčová', role: 'deputy', pin: '9999', approved: true },
-    { id: 'u3', name: 'Ján Novák', role: 'pilot', pin: '1234', approved: true },
-    { id: 'u4', name: 'Peter Horváth', role: 'pilot', pin: '5678', approved: false }
+    { id: 'u1', name: 'Igor Špaček', role: 'owner', pin: '0000', approved: true, status: 'active' },
+    { id: 'u2', name: 'Mária Kováčová', role: 'deputy', pin: '9999', approved: true, status: 'active' },
+    { id: 'u3', name: 'Ján Novák', role: 'pilot', pin: '1234', approved: true, status: 'active' },
+    { id: 'u4', name: 'Peter Horváth', role: 'pilot', pin: '5678', approved: false, status: 'pending' }
 ];
 
 const defaultFleet = [
@@ -35,6 +35,18 @@ class DataStoreImpl {
     init() {
         if (!localStorage.getItem(PREFIX + 'users')) {
             this.set('users', defaultUsers);
+        } else {
+            const users = this.get('users', []);
+            let updated = false;
+            users.forEach(u => {
+                if (!u.status) {
+                    u.status = u.approved ? 'active' : 'pending';
+                    updated = true;
+                }
+            });
+            if (updated) {
+                this.set('users', users);
+            }
         }
         if (!localStorage.getItem(PREFIX + 'fleet')) {
             this.set('fleet', defaultFleet);
