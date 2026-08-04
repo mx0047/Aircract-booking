@@ -3,8 +3,7 @@ const PREFIX = 'aircraft-booking-';
 const defaultUsers = [
     { id: 'u1', name: 'Igor Špaček', role: 'owner', pin: '0000', approved: true, status: 'active' },
     { id: 'u2', name: 'Martin Smejkal', role: 'deputy', pin: '9999', approved: true, status: 'active' },
-    { id: 'u3', name: 'Martin Otáhal', role: 'pilot', pin: '1234', approved: true, status: 'active' },
-    { id: 'u4', name: 'Peter Horváth', role: 'pilot', pin: '5678', approved: false, status: 'pending' }
+    { id: 'u3', name: 'Martin Otáhal', role: 'pilot', pin: '1234', approved: true, status: 'active' }
 ];
 
 const defaultFleet = [
@@ -43,6 +42,14 @@ class DataStoreImpl {
 
         // Run migrations on local cache if needed
         let updated = false;
+
+        // Migration: filter out Peter Horváth
+        const countBefore = this.users.length;
+        this.users = this.users.filter(u => u.id !== 'u4' && u.name !== 'Peter Horváth');
+        if (this.users.length !== countBefore) {
+            updated = true;
+        }
+
         this.users.forEach(u => {
             if (!u.status) {
                 u.status = u.approved ? 'active' : 'pending';
@@ -65,10 +72,19 @@ class DataStoreImpl {
                 this.fleet = data.fleet || [];
                 this.reservations = data.reservations || [];
                 
+                // Migration: filter out Peter Horváth
+                const countBefore = this.users.length;
+                this.users = this.users.filter(u => u.id !== 'u4' && u.name !== 'Peter Horváth');
+                const wasFiltered = this.users.length !== countBefore;
+
                 // Cache back to localStorage
                 this.set('users', this.users);
                 this.set('fleet', this.fleet);
                 this.set('reservations', this.reservations);
+
+                if (wasFiltered) {
+                    this.saveToServer('users', this.users);
+                }
                 return true;
             }
         } catch (e) {
