@@ -164,12 +164,20 @@ const Admin = {
                             <div class="card__body">
                                 <p><strong>Rola:</strong> ${u.role === 'owner' ? 'Majiteľ' : u.role === 'deputy' ? 'Zástupca' : 'Pilot'}</p>
                             </div>
-                            <div class="admin__actions">
-                                ${u.id !== currentUserId ? `
+                            <div class="admin__actions" style="flex-wrap: wrap; gap: 8px;">
+                                ${u.id === currentUserId ? '<span class="admin__note">Váš účet</span>' : `
                                     <button class="btn btn--outline admin__btn-toggle-user" data-id="${u.id}" data-status="${u.status}">
                                         ${u.status === 'active' ? 'Deaktivovať' : 'Aktivovať'}
                                     </button>
-                                ` : '<span class="admin__note">Váš účet</span>'}
+                                    ${u.role !== 'owner' ? `
+                                        <button class="btn btn--outline admin__btn-change-role" data-id="${u.id}" data-role="${u.role}">
+                                            ${u.role === 'deputy' ? 'Zmeniť na Pilota' : 'Zmeniť na Zástupcu'}
+                                        </button>
+                                        <button class="btn btn--danger btn--sm admin__btn-delete-user" data-id="${u.id}" data-name="${u.name}">
+                                            Vymazať
+                                        </button>
+                                    ` : ''}
+                                `}
                             </div>
                         </div>
                     `).join('')}
@@ -258,6 +266,17 @@ const Admin = {
         window.dispatchEvent(new CustomEvent('fleet-updated'));
     },
 
+    deleteUser(id) {
+        DataStore.removeUser(id);
+        window.dispatchEvent(new CustomEvent('user-updated'));
+    },
+
+    changeUserRole(id, currentRole) {
+        const newRole = currentRole === 'deputy' ? 'pilot' : 'deputy';
+        DataStore.updateUser(id, { role: newRole });
+        window.dispatchEvent(new CustomEvent('user-updated'));
+    },
+
     removeAircraft(id) {
         DataStore.removeAircraft(id);
         window.dispatchEvent(new CustomEvent('fleet-updated'));
@@ -332,6 +351,27 @@ const Admin = {
                     }
                 } else {
                     this.approveUser(id);
+                }
+            }
+
+            // Change user role
+            if (e.target.closest('.admin__btn-change-role')) {
+                const btn = e.target.closest('.admin__btn-change-role');
+                const id = btn.dataset.id;
+                const role = btn.dataset.role;
+                const newRoleLabel = role === 'deputy' ? 'Pilota' : 'Zástupcu';
+                if (confirm(`Naozaj chcete zmeniť rolu tohto používateľa na ${newRoleLabel}?`)) {
+                    this.changeUserRole(id, role);
+                }
+            }
+
+            // Delete user
+            if (e.target.closest('.admin__btn-delete-user')) {
+                const btn = e.target.closest('.admin__btn-delete-user');
+                const id = btn.dataset.id;
+                const name = btn.dataset.name;
+                if (confirm(`Naozaj chcete natrvalo vymazať používateľa "${name}"? Táto akcia sa nedá vrátiť.`)) {
+                    this.deleteUser(id);
                 }
             }
             
