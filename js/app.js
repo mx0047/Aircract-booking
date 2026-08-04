@@ -387,7 +387,7 @@ const App = {
                     <p style="margin-bottom: 6px; font-size: 0.9rem; color: var(--color-text-secondary);">
                         <strong>Pilot:</strong> ${pilotName}
                     </p>
-                    <p style="margin-bottom: 8px;">${start.toLocaleDateString('sk-SK')} o ${start.toLocaleTimeString('sk-SK', {hour:'2-digit', minute:'2-digit'})}</p>
+                    <p style="margin-bottom: 8px;">${start.toLocaleDateString('sk-SK')} o ${start.toLocaleTimeString('sk-SK', {hour:'2-digit', minute:'2-digit', hour12: false})}</p>
                     <span class="badge badge-${nextReservation.status}">${nextReservation.status === 'approved' ? 'Schválená' : 'Čakajúca'}</span>
                 </div>
             `;
@@ -399,8 +399,8 @@ const App = {
             const today = new Date();
             const w = VFR.getVfrWindow(today);
             if (w && w.sunrise && w.sunset) {
-                const sRise = w.sunrise.toLocaleTimeString('sk-SK', {hour:'2-digit', minute:'2-digit'});
-                const sSet = w.sunset.toLocaleTimeString('sk-SK', {hour:'2-digit', minute:'2-digit'});
+                const sRise = w.sunrise.toLocaleTimeString('sk-SK', {hour:'2-digit', minute:'2-digit', hour12: false});
+                const sSet = w.sunset.toLocaleTimeString('sk-SK', {hour:'2-digit', minute:'2-digit', hour12: false});
                 vfrHtml = `
                     <div class="vfr-card">
                         <div class="vfr-info">
