@@ -363,9 +363,12 @@ const App = {
         if (isAdmin) {
             let pRes = 0;
             if (DataStore.getPendingReservations) pRes = DataStore.getPendingReservations().length;
+            let pUsers = 0;
+            if (DataStore.getPendingUsers) pUsers = DataStore.getPendingUsers().length;
+            const totalPending = pRes + pUsers;
             pendingStats = `
                 <div class="stat-card" data-action="navigate" data-target="admin">
-                    <div class="stat-value text-warning">${pRes}</div>
+                    <div class="stat-value text-warning">${totalPending}</div>
                     <div class="stat-label">Čakajúce schválenia</div>
                 </div>
             `;
