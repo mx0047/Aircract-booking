@@ -85,6 +85,11 @@ class DataStoreImpl {
         const users = this.getUsers().map(u => u.id === id ? { ...u, ...data } : u);
         this.set('users', users);
     }
+
+    removeUser(id) {
+        const users = this.getUsers().filter(u => u.id !== id);
+        this.set('users', users);
+    }
     
     getUserByNameAndPin(name, pin) {
         return this.getUsers().find(u => u.name === name && u.pin === pin) || null;
