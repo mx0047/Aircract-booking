@@ -47,42 +47,41 @@ const Booking = {
             `;
         }
         
+        const defFrom = `${dateStr}T${timeFromStr || '08:00'}`;
+        const defTo = `${dateStr}T${timeToStr || '10:00'}`;
+
         return `
             <div class="booking-form-container card card--glass" style="padding: 20px; max-width: 480px; margin: 0 auto;">
                 <h3 class="booking-title" style="margin-bottom: 20px; text-align: center;">Nová rezervácia</h3>
                 
                 <form id="booking-form" class="booking-form" data-aircraft-id="${aircraft ? aircraft.id : ''}">
                     ${aircraftSelectorHtml}
-                    <div class="form-group">
-                        <label for="booking-date-from" class="form-label">Dátum od</label>
-                        <input type="date" id="booking-date-from" name="dateFrom" required class="form-input" value="${dateStr}">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <div>
+                            <label for="booking-datetime-from" class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Odlet (Vzlet)</label>
+                            <input type="datetime-local" id="booking-datetime-from" name="dateFrom" required class="form-input" value="${defFrom}" style="padding: 8px 10px; font-size: 0.9rem;">
+                        </div>
+                        <div>
+                            <label for="booking-datetime-to" class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Prílet (Pristátie)</label>
+                            <input type="datetime-local" id="booking-datetime-to" name="dateTo" required class="form-input" value="${defTo}" style="padding: 8px 10px; font-size: 0.9rem;">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="booking-time-from" class="form-label">Čas od</label>
-                        <input type="time" id="booking-time-from" name="timeFrom" required step="300" class="form-input" value="${timeFromStr}">
-                    </div>
-                    <div class="form-group">
-                        <label for="booking-date-to" class="form-label">Dátum do</label>
-                        <input type="date" id="booking-date-to" name="dateTo" required class="form-input" value="${dateStr}">
-                    </div>
-                    <div class="form-group">
-                        <label for="booking-time-to" class="form-label">Čas do</label>
-                        <input type="time" id="booking-time-to" name="timeTo" required step="300" class="form-input" value="${timeToStr}">
-                    </div>
-                    <div class="form-group">
-                        <label for="booking-purpose" class="form-label">Účel letu</label>
-                        <input type="text" id="booking-purpose" name="purpose" required class="form-input">
-                    </div>
-                    <div class="form-group">
-                        <label for="booking-note" class="form-label">Poznámka (voliteľné)</label>
-                        <textarea id="booking-note" name="note" class="form-textarea"></textarea>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <div>
+                            <label for="booking-purpose" class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Účel letu</label>
+                            <input type="text" id="booking-purpose" name="purpose" required class="form-input" placeholder="napr. Výcvik" style="padding: 8px 10px; font-size: 0.9rem;">
+                        </div>
+                        <div>
+                            <label for="booking-note" class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Poznámka (voliteľné)</label>
+                            <input type="text" id="booking-note" name="note" class="form-input" placeholder="Poznámka..." style="padding: 8px 10px; font-size: 0.9rem;">
+                        </div>
                     </div>
                     
                     <div id="vfr-info-display" class="vfr-info">
                         <!-- VFR info will be populated by JS -->
                     </div>
                     
-                    <button type="submit" class="btn btn--primary btn--block">Odoslať žiadosť</button>
+                    <button type="submit" class="btn btn-primary btn-block">Odoslať žiadosť</button>
                 </form>
             </div>
         `;
@@ -277,29 +276,40 @@ const Booking = {
         return fleet.find(a => a.id === id);
     },
 
-    parseDateTime(dateStr, timeStr) {
-        if (!dateStr || !timeStr) return new Date(NaN);
-        const dateParts = dateStr.split('-');
-        const timeParts = timeStr.split(':');
-        if (dateParts.length === 3 && timeParts.length >= 2) {
-            return new Date(
-                parseInt(dateParts[0], 10),
-                parseInt(dateParts[1], 10) - 1,
-                parseInt(dateParts[2], 10),
-                parseInt(timeParts[0], 10),
-                parseInt(timeParts[1], 10),
-                0
-            );
+    parseDateTime(dateStr, timeStr = null) {
+        if (!dateStr) return new Date(NaN);
+        let dateTimeStr = dateStr;
+        if (timeStr) {
+            dateTimeStr = `${dateStr}T${timeStr}`;
         }
-        return new Date(`${dateStr}T${timeStr}`);
+        if (dateTimeStr.includes('T')) {
+            const parts = dateTimeStr.split('T');
+            const dateParts = parts[0].split('-');
+            const timeParts = parts[1].split(':');
+            if (dateParts.length === 3 && timeParts.length >= 2) {
+                return new Date(
+                    parseInt(dateParts[0], 10),
+                    parseInt(dateParts[1], 10) - 1,
+                    parseInt(dateParts[2], 10),
+                    parseInt(timeParts[0], 10),
+                    parseInt(timeParts[1], 10),
+                    0
+                );
+            }
+        }
+        return new Date(dateTimeStr);
     },
 
     updateVfrInfo() {
-        const dateInput = document.getElementById('booking-date-from');
+        const dateInput = document.getElementById('booking-date-from') || document.getElementById('booking-datetime-from');
         const vfrDisplay = document.getElementById('vfr-info-display');
         
         if (dateInput && vfrDisplay && typeof VFR !== 'undefined' && VFR.getVfrWindow) {
-            const date = new Date(dateInput.value);
+            let val = dateInput.value;
+            if (val.includes('T')) {
+                val = val.split('T')[0];
+            }
+            const date = new Date(val);
             if (!isNaN(date.getTime())) {
                 const w = VFR.getVfrWindow(date);
                 if (w && w.sunrise && w.sunset) {
@@ -322,13 +332,23 @@ const Booking = {
                     const selectEl = document.getElementById('booking-aircraft-id');
                     if (selectEl) aircraftId = selectEl.value;
                 }
-                const dateFrom = document.getElementById('booking-date-from').value;
-                const timeFrom = document.getElementById('booking-time-from').value;
-                const dateTo = document.getElementById('booking-date-to').value;
-                const timeTo = document.getElementById('booking-time-to').value;
                 
-                const start = Booking.parseDateTime(dateFrom, timeFrom);
-                const end = Booking.parseDateTime(dateTo, timeTo);
+                let start, end;
+                const dtFromEl = document.getElementById('booking-datetime-from');
+                const dtToEl = document.getElementById('booking-datetime-to');
+                
+                if (dtFromEl && dtToEl) {
+                    start = Booking.parseDateTime(dtFromEl.value);
+                    end = Booking.parseDateTime(dtToEl.value);
+                } else {
+                    const dateFrom = document.getElementById('booking-date-from').value;
+                    const timeFrom = document.getElementById('booking-time-from').value;
+                    const dateTo = document.getElementById('booking-date-to').value;
+                    const timeTo = document.getElementById('booking-time-to').value;
+                    
+                    start = Booking.parseDateTime(dateFrom, timeFrom);
+                    end = Booking.parseDateTime(dateTo, timeTo);
+                }
                 
                 const data = {
                     aircraftId,
