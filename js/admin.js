@@ -1,4 +1,5 @@
 import DataStore from './data.js';
+import Auth from './auth.js';
 
 const Admin = {
     currentTab: 'approvals', // approvals, users, fleet
@@ -145,7 +146,8 @@ const Admin = {
 
     renderUserManagement() {
         const users = DataStore.getUsers().filter(u => u.status !== 'pending');
-        const currentUser = DataStore.getCurrentUser();
+        const currentUser = Auth.getCurrentUser();
+        const currentUserId = currentUser ? currentUser.id : null;
         
         return `
             <div class="admin__section">
@@ -163,7 +165,7 @@ const Admin = {
                                 <p><strong>Rola:</strong> ${u.role === 'owner' ? 'Majiteľ' : u.role === 'deputy' ? 'Zástupca' : 'Pilot'}</p>
                             </div>
                             <div class="admin__actions">
-                                ${u.id !== currentUser.id ? `
+                                ${u.id !== currentUserId ? `
                                     <button class="btn btn--outline admin__btn-toggle-user" data-id="${u.id}" data-status="${u.status}">
                                         ${u.status === 'active' ? 'Deaktivovať' : 'Aktivovať'}
                                     </button>
