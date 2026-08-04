@@ -58,12 +58,18 @@ const Booking = {
                     ${aircraftSelectorHtml}
                     <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px;">
                         <div>
-                            <label for="booking-datetime-from" class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Odlet (Vzlet)</label>
-                            <input type="datetime-local" id="booking-datetime-from" name="dateFrom" required class="form-input" value="${defFrom}" style="padding: 8px 10px; font-size: 0.9rem; width: 100%;">
+                            <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Odlet (Vzlet)</label>
+                            <div style="display: grid; grid-template-columns: 1fr auto; gap: 6px;">
+                                <input type="date" id="booking-date-from" name="dateFrom" required class="form-input" value="${dateStr}" style="padding: 8px 10px; font-size: 0.9rem;">
+                                <input type="time" id="booking-time-from" name="timeFrom" required step="300" class="form-input" value="${timeFromStr || '08:00'}" style="padding: 8px 10px; font-size: 0.9rem; width: 100px;">
+                            </div>
                         </div>
                         <div>
-                            <label for="booking-datetime-to" class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Prílet (Pristátie)</label>
-                            <input type="datetime-local" id="booking-datetime-to" name="dateTo" required class="form-input" value="${defTo}" style="padding: 8px 10px; font-size: 0.9rem; width: 100%;">
+                            <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Prílet (Pristátie)</label>
+                            <div style="display: grid; grid-template-columns: 1fr auto; gap: 6px;">
+                                <input type="date" id="booking-date-to" name="dateTo" required class="form-input" value="${dateStr}" style="padding: 8px 10px; font-size: 0.9rem;">
+                                <input type="time" id="booking-time-to" name="timeTo" required step="300" class="form-input" value="${timeToStr || '10:00'}" style="padding: 8px 10px; font-size: 0.9rem; width: 100px;">
+                            </div>
                         </div>
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
