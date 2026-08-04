@@ -2,8 +2,8 @@ const PREFIX = 'aircraft-booking-';
 
 const defaultUsers = [
     { id: 'u1', name: 'Igor Špaček', role: 'owner', pin: '0000', approved: true, status: 'active' },
-    { id: 'u2', name: 'Mária Kováčová', role: 'deputy', pin: '9999', approved: true, status: 'active' },
-    { id: 'u3', name: 'Ján Novák', role: 'pilot', pin: '1234', approved: true, status: 'active' },
+    { id: 'u2', name: 'Martin Smejkal', role: 'deputy', pin: '9999', approved: true, status: 'active' },
+    { id: 'u3', name: 'Martin Otáhal', role: 'pilot', pin: '1234', approved: true, status: 'active' },
     { id: 'u4', name: 'Peter Horváth', role: 'pilot', pin: '5678', approved: false, status: 'pending' }
 ];
 
@@ -43,6 +43,9 @@ class DataStoreImpl {
                     u.status = u.approved ? 'active' : 'pending';
                     updated = true;
                 }
+                // Name migrations
+                if (u.id === 'u2' && u.name === 'Mária Kováčová') { u.name = 'Martin Smejkal'; updated = true; }
+                if (u.id === 'u3' && u.name === 'Ján Novák') { u.name = 'Martin Otáhal'; updated = true; }
             });
             if (updated) {
                 this.set('users', users);
