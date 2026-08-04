@@ -3,7 +3,8 @@ const PREFIX = 'aircraft-booking-';
 const defaultUsers = [
     { id: 'u1', name: 'Igor Špaček', role: 'owner', pin: '0000', approved: true, status: 'active' },
     { id: 'u2', name: 'Martin Smejkal', role: 'deputy', pin: '9999', approved: true, status: 'active' },
-    { id: 'u3', name: 'Martin Otáhal', role: 'pilot', pin: '1234', approved: true, status: 'active' }
+    { id: 'u3', name: 'Martin Otáhal', role: 'pilot', pin: '1234', approved: true, status: 'active' },
+    { id: 'u5', name: 'Miro Skuba', role: 'pilot', pin: '3195', approved: true, status: 'active' }
 ];
 
 const defaultFleet = [
@@ -50,6 +51,13 @@ class DataStoreImpl {
             updated = true;
         }
 
+        // Migration: ensure Miro Skuba exists
+        const hasMiro = this.users.some(u => u.name === 'Miro Skuba');
+        if (!hasMiro) {
+            this.users.push({ id: 'u5', name: 'Miro Skuba', role: 'pilot', pin: '3195', approved: true, status: 'active' });
+            updated = true;
+        }
+
         this.users.forEach(u => {
             if (!u.status) {
                 u.status = u.approved ? 'active' : 'pending';
@@ -75,14 +83,21 @@ class DataStoreImpl {
                 // Migration: filter out Peter Horváth
                 const countBefore = this.users.length;
                 this.users = this.users.filter(u => u.id !== 'u4' && u.name !== 'Peter Horváth');
-                const wasFiltered = this.users.length !== countBefore;
+                let wasMigrated = this.users.length !== countBefore;
+
+                // Migration: ensure Miro Skuba exists
+                const hasMiro = this.users.some(u => u.name === 'Miro Skuba');
+                if (!hasMiro) {
+                    this.users.push({ id: 'u5', name: 'Miro Skuba', role: 'pilot', pin: '3195', approved: true, status: 'active' });
+                    wasMigrated = true;
+                }
 
                 // Cache back to localStorage
                 this.set('users', this.users);
                 this.set('fleet', this.fleet);
                 this.set('reservations', this.reservations);
 
-                if (wasFiltered) {
+                if (wasMigrated) {
                     this.saveToServer('users', this.users);
                 }
                 return true;
