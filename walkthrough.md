@@ -2,7 +2,7 @@
 
 ## Prehľad
 
-Mobilná webová aplikácia na rezerváciu ultraľahkých lietadiel Špaček SD-1 a SD-2 pre letisko Holíč (LZHL).
+Mobilná webová aplikácia na rezerváciu ultraľahkých lietadiel Špaček SD-1 a SD-2 pre letisko Holíč (LZHL), teraz s kompletným Node.js backendom a podporou pre nasadenie na **Vercel.com**.
 
 ---
 
@@ -10,66 +10,58 @@ Mobilná webová aplikácia na rezerváciu ultraľahkých lietadiel Špaček SD-
 
 ```
 C:\Users\skubamro\.gemini\antigravity\scratch\aircraft-booking\
+├── vercel.json                 # Konfigurácia smerovania pre Vercel
+├── package.json                # NPM definícia (Express závislosti)
 ├── index.html                  # Hlavná HTML stránka
 ├── manifest.json               # PWA manifest
+├── api/
+│   └── index.js                # Serverless Express API backend (dual storage)
 ├── css/
 │   └── styles.css              # Kompletný CSS (2100+ riadkov)
 ├── js/
-│   ├── app.js                  # Hlavný kontrolér (~540 riadkov)
-│   ├── data.js                 # Dátový model + localStorage
+│   ├── app.js                  # Hlavný kontrolér, smerovanie, sync s API
+│   ├── data.js                 # Dátový model, prepojenie s backendom & local cache
 │   ├── vfr.js                  # VFR sunrise/sunset výpočty (NOAA)
 │   ├── auth.js                 # Prihlásenie + registrácia
 │   ├── booking.js              # Rezervačná logika + validácia
 │   ├── calendar.js             # Kalendár + denný timeline
 │   └── admin.js                # Admin panel (schvaľovanie)
-└── img/                        # Priečinok pre logo
+└── img/                        # Logá a SVG ikony
 ```
 
 ---
 
-## Funkcionalita
+## 🔧 Nové: Online Backend & Vercel Synchronizácia
 
-### 🔐 Prihlásenie & Registrácia
-- PIN-based login (4-ciferný kód)
-- Registrácia nových pilotov (vyžaduje schválenie adminom)
-- Logo SD PLANES s textovým fallbackom
+Aplikácia prešla z čisto offline úložiska na plne zdieľaný online model:
 
-### 📊 Dashboard
-- Vitajte správa s menom pilota
-- Štatistiky: počet lietadiel, moje rezervácie, čakajúce schválenia
-- Najbližšia rezervácia
-- VFR info pre dnešný deň (východ/západ slnka)
+1. **Automatické načítanie (`DataStore.load()`):**
+   Pri štarte aplikácie a pri každom prechode na novú obrazovku (napr. preklik na kalendár alebo dashboard) sa na pozadí stiahnu najnovšie rezervácie a stavy účtov od ostatných pilotov.
+2. **Background uloženie (`DataStore.saveToServer()`):**
+   Všetky zmeny (vytvorenie rezervácie, zrušenie rezervácie, registrácia, schválenie pilota, zmena roly, pridanie lietadla) sa okamžite odosielajú na backend.
+3. **Dual Storage Engine (`api/index.js`):**
+   - **Vercel KV (Redis):** Ak je na Verceli prepojený Storage, backend používa super-rýchlu serverless Redis databázu.
+   - **Záložný lokálny súbor (`db.json`):** Pri lokálnom behu sa dáta ukladajú do lokálneho súboru pre zjednodušenie vývoja bez nutnosti konfigurovať externé databázy.
 
-### ✈️ Lietadlá
-- Zoznam lietadiel rozdelený podľa typu (SD-1, SD-2)
-- Glassmorphism karty s registráciou, typom, počtom miest
-- Kliknutie → otvorí kalendár pre dané lietadlo
+---
 
-### 📅 Kalendár
-- Mesačný prehľad so slovenskými názvami dní a mesiacov
-- Navigácia medzi mesiacmi
-- Označenie dní s existujúcimi rezerváciami
-- **Denný timeline (04:00 – 22:00)**:
-  - 🟢 VFR zóna (zelená) – lietateľné hodiny
-  - 🔴 Nočná zóna (červená) – nelietateľné
-  - Sunrise/sunset markery
-  - Existujúce rezervácie ako farebné bloky
-  - Kliknutie na voľný VFR slot → vytvorenie rezervácie
+## 🚀 Postup Nasadenia na Vercel
 
-### 📝 Rezervácia
-- Formulár: dátum/čas od-do, účel letu, poznámka
-- **Validácia**:
-  - Min. 20 minút
-  - Musí byť v budúcnosti
-  - Celý rozsah v rámci VFR okna
-  - Žiadne kolízie s existujúcimi rezerváciami
-- VFR informácie zobrazené pri formulári
+Aplikácia je plne pripravená na nasadenie na jedno kliknutie:
 
-### 🛡️ Admin Panel
-- **Schvaľovanie**: čakajúce rezervácie + čakajúci používatelia
-- **Používatelia**: správa účtov (schváliť/odobrať prístup)
-- **Flotila**: pridanie/odobranie lietadiel
-- Badge na navigácii s počtom čakajúcich žiadostí
+### Krok 1: Nahratie na Vercel
+1. Prihláste sa na [Vercel.com](https://vercel.com).
+2. Kliknite na **Add New** → **Project**.
+3. Importujte Váš GitHub repozitár s aplikáciou (`https://github.com/mx0047/Aircract-booking`).
+4. Kliknite na **Deploy**.
+
+### Krok 2: Prepojenie Vercel KV Databázy (Dôležité pre ukladanie)
+1. Po úspešnom nasadení prejdite do nastavení projektu vo Verceli.
+2. Kliknite na kartu **Storage** v hornom menu.
+3. Vyberte **KV** (Redis) a kliknite na **Create**.
+4. Po vytvorení prepojte databázu s Vaším projektom (kliknite na **Connect**).
+5. Vercel automaticky pridá premenné prostredia (`KV_REST_API_URL`, `KV_REST_API_TOKEN`) do Vášho projektu.
+6. Prejdite na kartu **Deployments** a kliknite na **Redeploy** (alebo urobte nový push do GitHubu), aby sa načítali nové nastavenia.
 
 ---
 
@@ -78,73 +70,15 @@ C:\Users\skubamro\.gemini\antigravity\scratch\aircraft-booking\
 | Meno | PIN | Rola | Status |
 |------|-----|------|--------|
 | Igor Špaček | 0000 | Majiteľ (admin) | ✅ Aktívny |
-| Mária Kováčová | 9999 | Zástupca (admin) | ✅ Aktívny |
-| Ján Novák | 1234 | Pilot | ✅ Aktívny |
+| Martin Smejkal | 9999 | Zástupca (admin) | ✅ Aktívny |
+| Martin Otáhal | 1234 | Pilot | ✅ Aktívny |
 | Peter Horváth | 5678 | Pilot | ⏳ Čaká na schválenie |
-
----
-
-## Flotila Lietadiel
-
-| Typ | Registrácia | Miesta |
-|-----|-------------|--------|
-| SD-1 Minisport | OK-VUR | 1 |
-| SD-2 SportMaster | OK-BUR37 | 2 |
-| SD-2 SportMaster | OK-UUR02 | 2 |
-
----
-
-## Spustenie
-
-Keďže aplikácia používa ES6 moduly, musí byť servovaná cez HTTP server:
-
-```bash
-# Python
-python -m http.server 3000
-
-# Node.js (ak máte nainštalované)
-npx serve . -l 3000
-
-# Live Server vo VS Code
-# Otvorte index.html a kliknite "Go Live"
-```
-
-Potom otvorte `http://localhost:3000` v prehliadači.
-
-> [!TIP]
-> Odporúčam otvoriť v prehliadači s vývojárskymi nástrojmi (F12) a prepnúť na mobilný režim (napr. iPhone 14 Pro) pre najlepší zážitok.
 
 ---
 
 ## Technické Detaily
 
+- **Backend**: Node.js, Express 4, Vercel Serverless Functions
 - **VFR výpočty**: NOAA algoritmus pre Holíč LZHL (48.8103°N, 17.1338°E)
-- **Dáta**: localStorage (prefix `aircraft-booking-`)
-- **Dizajn**: Dark aviation theme, glassmorphism, Inter font
-- **Jazyk UI**: Slovenčina
-- **PWA ready**: manifest.json pre pridanie na plochu
-
----
-
-## 🔧 Opravy chýb a vylepšenia (Najnovšie)
-
-V aplikácii boli opravené a otestované nasledovné kritické chyby:
-
-1. **Oprava tlačidiel a prepínania mesiacov/dní v kalendári (`calendar.js`):**
-   - Súbor `calendar.js` sa pokúšal aktualizovať neexistujúci kontajner `#calendar-container`. Selektor bol opravený na `#screen-calendar`, čím sa plne spoplatnili tlačidlá navigácie `&lt;` a `&gt;` aj klikanie na jednotlivé dni.
-   
-2. **Oprava schvaľovacieho procesu v Admin paneli (`admin.js`):**
-   - Odstránili sa nesprávne `parseInt` pretypovania pri získavaní ID. ID používateľov (napr. `u1`, `u2`) aj rezervácií (napr. `r17000...`) sú reťazce, pretypovanie vracalo `NaN`, čo spôsobovalo pád schvaľovacieho, zamietacieho a mazacieho workflow.
-   - Opravené volania `DataStore.getAircraft()` na správne `DataStore.getFleet()`.
-   - Zosúladené mapovanie rezervácie z `userId` / `userName` na korektné `pilotId` / `pilotName` na základe dátového modelu.
-   
-3. **Podpora pre viacdňové rezervácie a VFR validácia (`vfr.js`):**
-   - Pôvodná validácia `isTimeRangeInVfr` neumožňovala viacdňové lety, pretože kontrolovala celý rozsah voči prvému dňu. Nová implementácia kontroluje, či štart spadá do VFR dňa v odletový deň a koniec spadá do VFR dňa v deň príletu, čím podporuje viacdňový prenájom.
-
-4. **Spracovanie stavov neschválených/deaktivovaných používateľov (`auth.js` & `data.js`):**
-   - Doplnená migrácia do `DataStore.init()` pre staré databázy v localStorage, aby všetci používatelia dostali korektný prístupový `status`.
-   - Pri deactivation v admin paneli sa teraz `approved` správne nastaví na `false`, a systém pri pokuse o login zobrazí prepracované správy ("Váš účet bol deaktivovaný/zamietnutý administrátorom").
-
-5. **Automatické predvyplnenie času z kalendára:**
-   - Kliknutie na voľný hodinový slot na timeline v kalendári teraz automaticky predvyplní formulár rezervácie (čas od-do) pre danú hodinu.
-
+- **Klient**: Vanilla JS (ES Modules)
+- **Synchronizácia**: Fetch API, CORS ready, offline cache v localStorage
