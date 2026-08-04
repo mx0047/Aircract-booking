@@ -170,6 +170,10 @@ const App = {
             case 'aircraft-list':
                 screenHtml = this.renderAircraftList();
                 break;
+            case 'create-booking':
+                const aircraftId = params ? params.aircraftId : null;
+                screenHtml = typeof Booking.renderBookingForm === 'function' ? Booking.renderBookingForm(aircraftId) : '<p>Formulár nie je k dispozícii.</p>';
+                break;
             case 'calendar':
                 if (params && params.aircraftId) {
                     if (typeof Calendar !== 'undefined' && typeof Calendar.renderCalendarScreen === 'function') {
@@ -184,8 +188,9 @@ const App = {
                 break;
             case 'my-reservations':
                 screenHtml = `
-                    <div class="screen-header">
-                        <h2>Moje rezervácie</h2>
+                    <div class="screen-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="margin: 0;">Moje rezervácie</h2>
+                        <button class="btn btn-primary" data-action="navigate" data-target="create-booking" style="padding: 6px 12px; font-size: 0.875rem;">Nová rezervácia</button>
                     </div>
                     <div class="screen-body">
                         ${typeof Booking.renderReservationsList === 'function' ? Booking.renderReservationsList('mine') : ''}
@@ -432,7 +437,7 @@ const App = {
                 </div>
                 
                 <div class="dashboard-actions">
-                    <button class="btn btn-primary btn-block" data-action="navigate" data-target="aircraft-list">Nová rezervácia</button>
+                    <button class="btn btn-primary btn-block" data-action="navigate" data-target="create-booking">Nová rezervácia</button>
                 </div>
             </div>
         `;
