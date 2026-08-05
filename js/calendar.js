@@ -34,6 +34,16 @@ const Calendar = {
             const day = parseInt(dayEl.dataset.day, 10);
             selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
             this.updateCalendarScreen();
+            
+            // Open booking modal for selected date
+            const dateStr = this.formatDateStr(selectedDate);
+            window.dispatchEvent(new CustomEvent('create-booking', {
+                detail: {
+                    aircraftId: currentAircraftId,
+                    date: dateStr,
+                    hour: null
+                }
+            }));
         }
 
         // Slot selection for booking
