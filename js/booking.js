@@ -174,6 +174,10 @@ const Booking = {
             'rejected': 'Zamietnutá'
         };
         
+        const pad = n => n.toString().padStart(2, '0');
+        const formatDate = d => `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
+        const formatTime = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        
         return `
             <div class="reservation-card" data-id="${reservation.id}">
                 <div class="reservation-header">
@@ -182,8 +186,8 @@ const Booking = {
                 </div>
                 <div class="reservation-body">
                     <p class="reservation-time">
-                        ${start.toLocaleDateString('sk-SK')} ${start.toLocaleTimeString('sk-SK', {hour: '2-digit', minute:'2-digit', hour12: false})} - 
-                        ${end.toLocaleDateString('sk-SK')} ${end.toLocaleTimeString('sk-SK', {hour: '2-digit', minute:'2-digit', hour12: false})}
+                        ${formatDate(start)} ${formatTime(start)} - 
+                        ${formatDate(end)} ${formatTime(end)}
                     </p>
                     <p class="reservation-pilot"><strong>Pilot:</strong> ${reservation.pilotName || 'Neznámy'}</p>
                     <p class="reservation-purpose"><strong>Účel:</strong> ${reservation.purpose}</p>
