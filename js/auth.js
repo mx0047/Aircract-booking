@@ -30,6 +30,10 @@ const Auth = {
                             <input type="password" id="login-pin" name="pin" required pattern="\\d{4}" maxlength="4" class="form-input">
                         </div>
                         <button type="submit" class="btn btn--primary btn--block">Prihlásiť sa</button>
+                        
+                        <button type="button" id="btn-biometric-login" class="btn btn--outline btn--block" style="margin-top: 12px; display: none; align-items: center; justify-content: center; gap: 8px; border-color: var(--color-accent); color: var(--color-accent); font-weight: 600; padding: 10px;">
+                            <span>👤</span> Prihlásiť cez Face ID / Biometriu
+                        </button>
                     </form>
 
                     <form id="register-form" class="auth-form" style="display: none;">
@@ -112,6 +116,126 @@ const Auth = {
         DataStore.addUser(newUser);
 
         return { success: true, message: 'Registrácia bola úspešná. Váš účet čaká na schválenie.' };
+    },
+
+    async isBiometricsAvailable() {
+        if (!window.PublicKeyCredential) return false;
+        try {
+            return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+        } catch (e) {
+            return false;
+        }
+    },
+
+    async registerBiometrics() {
+        const user = this.getCurrentUser();
+        if (!user) throw new Error('Používateľ nie je prihlásený.');
+
+        if (!window.PublicKeyCredential) {
+            throw new Error('Biometrické prihlasovanie nie je podporované v tomto prehliadači.');
+        }
+
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+        const userId = new Uint8Array(16);
+        window.crypto.getRandomValues(userId);
+
+        const createOptions = {
+            challenge: challenge,
+            rp: {
+                name: "SD Planes",
+                id: window.location.hostname
+            },
+            user: {
+                id: userId,
+                name: user.name,
+                displayName: user.name
+            },
+            pubKeyCredParams: [
+                { alg: -7, type: "public-key" },
+                { alg: -257, type: "public-key" }
+            ],
+            authenticatorSelection: {
+                authenticatorAttachment: "platform",
+                userVerification: "required",
+                residentKey: "required",
+                requireResidentKey: true
+            },
+            timeout: 60000
+        };
+
+        const credential = await navigator.credentials.create({ publicKey: createOptions });
+        if (!credential) throw new Error('Nepodarilo sa vytvoriť biometrický kľúč.');
+
+        const rawId = new Uint8Array(credential.rawId);
+        const credentialIdBase64 = btoa(Array.from(rawId).map(c => String.fromCharCode(c)).join(''));
+
+        const biometrics = {
+            credentialId: credentialIdBase64,
+            registeredAt: new Date().toISOString()
+        };
+
+        DataStore.updateUser(user.id, { biometrics });
+        
+        const updatedUser = { ...user, biometrics };
+        sessionStorage.setItem('currentUser', JSON.stringify(updatedUser));
+        
+        return true;
+    },
+
+    async loginBiometrics() {
+        if (!window.PublicKeyCredential) {
+            throw new Error('Biometrické prihlasovanie nie je podporované v tomto prehliadači.');
+        }
+
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+
+        const getOptions = {
+            challenge: challenge,
+            rpId: window.location.hostname,
+            timeout: 60000,
+            userVerification: "required"
+        };
+
+        const assertion = await navigator.credentials.get({ publicKey: getOptions });
+        if (!assertion) throw new Error('Overenie zlyhalo.');
+
+        const rawId = new Uint8Array(assertion.rawId);
+        const credentialIdBase64 = btoa(Array.from(rawId).map(c => String.fromCharCode(c)).join(''));
+
+        const users = DataStore.getUsers();
+        const user = users.find(u => u.biometrics && u.biometrics.credentialId === credentialIdBase64);
+
+        if (!user) {
+            throw new Error('Pre toto zariadenie nebola nájdená žiadna Face ID / Biometria.');
+        }
+
+        if (user.status === 'rejected') {
+            throw new Error('Váš prístup bol zamietnutý administrátorom.');
+        }
+        if (user.status === 'inactive') {
+            throw new Error('Váš účet bol deaktivovaný administrátorom.');
+        }
+        if (!user.approved && user.role !== 'owner' && user.role !== 'deputy') {
+            throw new Error('Váš účet čaká na schválenie administrátorom.');
+        }
+
+        this.currentUser = user;
+        sessionStorage.setItem('currentUser', JSON.stringify(user));
+        return user;
+    },
+
+    initLoginBiometrics() {
+        this.isBiometricsAvailable().then(available => {
+            if (available) {
+                const hasBiometrics = DataStore.getUsers().some(u => u.biometrics);
+                const btn = document.getElementById('btn-biometric-login');
+                if (btn && hasBiometrics) {
+                    btn.style.display = 'flex';
+                }
+            }
+        });
     },
 
     isLoggedIn() {
@@ -228,6 +352,31 @@ const Auth = {
                 const errorEl = document.getElementById('register-error');
                 if (errorEl) {
                     errorEl.style.display = 'none';
+                }
+            }
+        });
+        
+        // Biometric login click handler
+        document.body.addEventListener('click', async (e) => {
+            if (e.target.closest('#btn-biometric-login')) {
+                const errorEl = document.getElementById('login-error');
+                if (errorEl) {
+                    errorEl.style.display = 'none';
+                    errorEl.innerText = '';
+                }
+                
+                try {
+                    const user = await this.loginBiometrics();
+                    this.showToast('Úspešne prihlásený.', 'success');
+                    window.dispatchEvent(new CustomEvent('auth-changed', { detail: { loggedIn: true, user: user } }));
+                } catch (err) {
+                    console.error('Biometrics login error:', err);
+                    if (errorEl) {
+                        errorEl.innerText = err.message || 'Overenie Face ID / Biometriou zlyhalo.';
+                        errorEl.style.display = 'block';
+                    } else {
+                        this.showToast(err.message || 'Overenie zlyhalo.', 'error');
+                    }
                 }
             }
         });
