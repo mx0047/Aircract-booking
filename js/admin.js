@@ -1,5 +1,5 @@
-import DataStore from './data.js';
-import Auth from './auth.js';
+import DataStore from './data.js?v=1.0.1';
+import Auth from './auth.js?v=1.0.1';
 
 const Admin = {
     currentTab: 'approvals', // approvals, users, fleet
