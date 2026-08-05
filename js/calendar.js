@@ -35,15 +35,13 @@ const Calendar = {
             selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
             this.updateCalendarScreen();
             
-            // Open booking modal for selected date
-            const dateStr = this.formatDateStr(selectedDate);
-            window.dispatchEvent(new CustomEvent('create-booking', {
-                detail: {
-                    aircraftId: currentAircraftId,
-                    date: dateStr,
-                    hour: null
+            // Smoothly scroll the daily timeline into view so mobile users see it immediately
+            setTimeout(() => {
+                const timelineEl = document.querySelector('.timeline');
+                if (timelineEl) {
+                    timelineEl.scrollIntoView({ behavior: 'smooth' });
                 }
-            }));
+            }, 100);
         }
 
         // Slot selection for booking
