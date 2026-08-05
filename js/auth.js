@@ -20,6 +20,7 @@ const Auth = {
 
                 <div class="auth-forms">
                     <form id="login-form" class="auth-form active">
+                        <div id="login-error" class="auth-error-msg" style="display:none; color: #ef4444; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); padding: 10px 14px; border-radius: 8px; font-size: 0.9rem; margin-bottom: 15px; text-align: center; font-weight: 500; line-height: 1.4;"></div>
                         <div class="form-group">
                             <label for="login-name" class="form-label">Meno a priezvisko</label>
                             <input type="text" id="login-name" name="name" required minlength="2" class="form-input">
@@ -32,6 +33,7 @@ const Auth = {
                     </form>
 
                     <form id="register-form" class="auth-form" style="display: none;">
+                        <div id="register-error" class="auth-error-msg" style="display:none; color: #ef4444; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); padding: 10px 14px; border-radius: 8px; font-size: 0.9rem; margin-bottom: 15px; text-align: center; font-weight: 500; line-height: 1.4;"></div>
                         <div class="form-group">
                             <label for="register-name" class="form-label">Meno a priezvisko</label>
                             <input type="text" id="register-name" name="name" required minlength="2" class="form-input">
@@ -167,25 +169,65 @@ const Auth = {
                 e.preventDefault();
                 const name = document.getElementById('login-name').value.trim();
                 const pin = document.getElementById('login-pin').value;
+                
+                const errorEl = document.getElementById('login-error');
+                if (errorEl) {
+                    errorEl.style.display = 'none';
+                    errorEl.innerText = '';
+                }
+                
                 const result = this.handleLogin(name, pin);
                 if (result.success) {
                     this.showToast(result.message, 'success');
                     window.dispatchEvent(new CustomEvent('auth-changed', { detail: { loggedIn: true, user: result.user } }));
                 } else {
-                    this.showToast(result.message, 'error');
+                    if (errorEl) {
+                        errorEl.innerText = result.message;
+                        errorEl.style.display = 'block';
+                    } else {
+                        this.showToast(result.message, 'error');
+                    }
                 }
             } else if (e.target.id === 'register-form') {
                 e.preventDefault();
                 const name = document.getElementById('register-name').value.trim();
                 const pin = document.getElementById('register-pin').value;
                 const pinConfirm = document.getElementById('register-pin-confirm').value;
+                
+                const errorEl = document.getElementById('register-error');
+                if (errorEl) {
+                    errorEl.style.display = 'none';
+                    errorEl.innerText = '';
+                }
+                
                 const result = this.handleRegister(name, pin, pinConfirm);
                 if (result.success) {
                     this.showToast(result.message, 'success');
                     document.getElementById('register-form').reset();
                     document.querySelector('.auth-tab[data-target="login-form"]').click();
                 } else {
-                    this.showToast(result.message, 'error');
+                    if (errorEl) {
+                        errorEl.innerText = result.message;
+                        errorEl.style.display = 'block';
+                    } else {
+                        this.showToast(result.message, 'error');
+                    }
+                }
+            }
+        });
+        
+        // Responsive error clearing on input
+        document.body.addEventListener('input', (e) => {
+            if (e.target.closest('#login-form')) {
+                const errorEl = document.getElementById('login-error');
+                if (errorEl) {
+                    errorEl.style.display = 'none';
+                }
+            }
+            if (e.target.closest('#register-form')) {
+                const errorEl = document.getElementById('register-error');
+                if (errorEl) {
+                    errorEl.style.display = 'none';
                 }
             }
         });
