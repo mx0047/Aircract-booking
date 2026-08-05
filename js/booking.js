@@ -1,6 +1,6 @@
-import DataStore from './data.js';
-import VFR from './vfr.js';
-import Auth from './auth.js';
+import DataStore from './data.js?v=1.0.1';
+import VFR from './vfr.js?v=1.0.1';
+import Auth from './auth.js?v=1.0.1';
 
 const Booking = {
     renderBookingForm(aircraftId = null, selectedDate = new Date(), hour = null) {
