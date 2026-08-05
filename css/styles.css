@@ -848,6 +848,15 @@ img, svg {
   border-left-color: #10b981;
 }
 
+.timeline__booking--past {
+  background: rgba(100, 116, 139, 0.1) !important;
+  border-color: rgba(100, 116, 139, 0.25) !important;
+  border-left-color: #64748b !important;
+  color: var(--color-text-secondary) !important;
+  opacity: 0.55 !important;
+  box-shadow: none !important;
+}
+
 .timeline__booking--pending {
   background: rgba(234, 179, 8, 0.2);
   border-color: rgba(234, 179, 8, 0.5);
@@ -1906,6 +1915,14 @@ img, svg {
   border-radius: 12px;
   padding: var(--spacing-md);
   border-left: 3px solid var(--color-warning);
+}
+
+.reservation-card--past {
+  opacity: 0.55 !important;
+  background: rgba(255,255,255,0.01) !important;
+  border-color: rgba(255,255,255,0.05) !important;
+  border-left-color: #64748b !important;
+  box-shadow: none !important;
 }
 
 .reservation-card .badge-approved { border-left-color: var(--color-success); }
