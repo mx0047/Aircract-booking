@@ -163,10 +163,11 @@ const Booking = {
         const currentUser = Auth.getCurrentUser();
         const start = new Date(reservation.dateFrom);
         const end = new Date(reservation.dateTo);
+        const isPast = end < new Date();
         
         const isAdmin = currentUser && (currentUser.role === 'owner' || currentUser.role === 'deputy');
-        const isOwnCancellable = currentUser && currentUser.id === reservation.pilotId && reservation.status !== 'rejected';
-        const canCancel = isOwnCancellable || (isAdmin && reservation.status !== 'rejected');
+        const isOwnCancellable = currentUser && currentUser.id === reservation.pilotId && reservation.status !== 'rejected' && !isPast;
+        const canCancel = isOwnCancellable || (isAdmin && reservation.status !== 'rejected' && !isPast);
         
         const statusMap = {
             'pending': 'Čakajúca',
@@ -179,7 +180,7 @@ const Booking = {
         const formatTime = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
         
         return `
-            <div class="reservation-card" data-id="${reservation.id}">
+            <div class="reservation-card ${isPast ? 'reservation-card--past' : ''}" data-id="${reservation.id}">
                 <div class="reservation-header">
                     <span class="reservation-aircraft">${aircraft ? aircraft.type + ' ' + aircraft.registration : 'Neznáme'}</span>
                     <span class="badge badge--${reservation.status}">${statusMap[reservation.status]}</span>
