@@ -22,7 +22,7 @@ const Auth = {
                     <form id="login-form" class="auth-form active">
                         <div id="login-error" class="auth-error-msg" style="display:none; color: #ef4444; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); padding: 10px 14px; border-radius: 8px; font-size: 0.9rem; margin-bottom: 15px; text-align: center; font-weight: 500; line-height: 1.4;"></div>
                         <div class="form-group">
-                            <label for="login-name" class="form-label">Meno a priezvisko</label>
+                            <label for="login-name" class="form-label">Meno a priezvisko (bez diakritiky)</label>
                             <input type="text" id="login-name" name="name" required minlength="2" class="form-input">
                         </div>
                         <div class="form-group">
@@ -39,7 +39,7 @@ const Auth = {
                     <form id="register-form" class="auth-form" style="display: none;">
                         <div id="register-error" class="auth-error-msg" style="display:none; color: #ef4444; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); padding: 10px 14px; border-radius: 8px; font-size: 0.9rem; margin-bottom: 15px; text-align: center; font-weight: 500; line-height: 1.4;"></div>
                         <div class="form-group">
-                            <label for="register-name" class="form-label">Meno a priezvisko</label>
+                            <label for="register-name" class="form-label">Meno a priezvisko (bez diakritiky)</label>
                             <input type="text" id="register-name" name="name" required minlength="2" class="form-input">
                         </div>
                         <div class="form-group">
