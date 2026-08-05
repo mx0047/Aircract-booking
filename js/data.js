@@ -250,6 +250,12 @@ class DataStoreImpl {
         this.saveToServer('fleet', this.fleet);
     }
 
+    updateAircraft(id, data) {
+        this.fleet = this.fleet.map(a => a.id === id ? { ...a, ...data } : a);
+        this.set('fleet', this.fleet);
+        this.saveToServer('fleet', this.fleet);
+    }
+
     // --- Users ---
     getUsers() { return this.users; }
     
