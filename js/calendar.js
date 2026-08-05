@@ -256,7 +256,6 @@ const Calendar = {
 
         html += `
                 </div>
-                <button class="timeline__add-btn">+</button>
             </div>
         `;
 
@@ -290,6 +289,14 @@ const Calendar = {
         return `
             <div class="calendar-screen">
                 ${this.renderMonthView(year, month, currentAircraftId)}
+                
+                <!-- Action bar between month and timeline -->
+                <div class="calendar__actions" style="display: flex; justify-content: center; margin: 15px 0 5px 0;">
+                    <button class="btn btn-primary timeline__add-btn" style="display: flex; align-items: center; gap: 8px; padding: 10px 20px; font-weight: 600; border-radius: 8px; box-shadow: var(--shadow-md); width: calc(100% - 30px); margin: 0 15px; justify-content: center;">
+                        <span style="font-size: 1rem;">➕</span> Rezervácia letu
+                    </button>
+                </div>
+                
                 ${this.renderDayTimeline(selectedDate, currentAircraftId)}
             </div>
         `;
