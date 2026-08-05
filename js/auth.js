@@ -1,4 +1,4 @@
-import DataStore from './data.js';
+import DataStore from './data.js?v=1.0.1';
 
 const Auth = {
     currentUser: null,
