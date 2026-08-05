@@ -22,14 +22,27 @@ const Booking = {
         const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
         const yyyy = dateObj.getFullYear();
         const dateDisplayStr = `${dd}/${mm}/${yyyy}`; // DD/MM/YYYY for display
-        
+
+        // Compute VFR window for this date to limit time selects
+        let vfrStartH = 5;  // fallback: 05:00
+        let vfrEndH   = 20; // fallback: 20:00
+        if (typeof VFR !== 'undefined' && VFR.getVfrWindow) {
+            const vfrWin = VFR.getVfrWindow(dateObj);
+            if (vfrWin && vfrWin.sunrise && vfrWin.sunset) {
+                const vs = vfrWin.vfrStart || vfrWin.sunrise;
+                const ve = vfrWin.vfrEnd   || vfrWin.sunset;
+                vfrStartH = vs.getHours() + vs.getMinutes() / 60;
+                vfrEndH   = ve.getHours() + ve.getMinutes() / 60;
+            }
+        }
+
         let timeFromStr = '';
         let timeToStr = '';
         if (hour !== null && hour !== undefined) {
-            const hStr = String(hour).padStart(2, '0');
+            const hStr = String(Math.max(Math.floor(vfrStartH), Math.min(hour, Math.ceil(vfrEndH)))).padStart(2, '0');
             timeFromStr = `${hStr}:00`;
-            const nextHStr = String((parseInt(hour) + 1) % 24).padStart(2, '0');
-            timeToStr = `${nextHStr}:00`;
+            const nextH = Math.min(parseInt(hStr) + 1, Math.ceil(vfrEndH));
+            timeToStr = `${String(nextH).padStart(2, '0')}:00`;
         }
         
         let aircraftSelectorHtml = '';
@@ -104,14 +117,14 @@ const Booking = {
                             <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Odlet (Vzlet)</label>
                             <div style="display: grid; grid-template-columns: 1fr auto auto auto; gap: 6px; align-items: center;">
                                 <input type="text" id="booking-date-from" name="dateFrom" required class="form-input" value="${dateDisplayStr}" placeholder="DD/MM/RRRR" maxlength="10" inputmode="numeric" style="padding: 8px 10px; font-size: 0.9rem; width: 130px;">
-                                ${Booking.buildTimeSelectHtml('booking-time-from', timeFromStr || '08:00')}
+                                ${Booking.buildTimeSelectHtml('booking-time-from', timeFromStr || `${String(Math.floor(vfrStartH)).padStart(2,'0')}:00`, vfrStartH, vfrEndH)}
                             </div>
                         </div>
                         <div>
                             <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Prílet (Pristátie)</label>
                             <div style="display: grid; grid-template-columns: 1fr auto auto auto; gap: 6px; align-items: center;">
                                 <input type="text" id="booking-date-to" name="dateTo" required class="form-input" value="${dateDisplayStr}" placeholder="DD/MM/RRRR" maxlength="10" inputmode="numeric" style="padding: 8px 10px; font-size: 0.9rem; width: 130px;">
-                                ${Booking.buildTimeSelectHtml('booking-time-to', timeToStr || '10:00')}
+                                ${Booking.buildTimeSelectHtml('booking-time-to', timeToStr || `${String(Math.min(Math.floor(vfrStartH)+2, Math.ceil(vfrEndH))).padStart(2,'0')}:00`, vfrStartH, vfrEndH)}
                             </div>
                         </div>
                     </div>
@@ -334,11 +347,14 @@ const Booking = {
         return fleet.find(a => a.id === id);
     },
 
-    buildTimeSelectHtml(idPrefix, defaultTime) {
+    buildTimeSelectHtml(idPrefix, defaultTime, vfrStartH = 0, vfrEndH = 23) {
         const [defH, defM] = (defaultTime || '08:00').split(':');
         const mins = ['00','05','10','15','20','25','30','35','40','45','50','55'];
-        const hourOpts = Array.from({length: 24}, (_, i) => {
-            const v = String(i).padStart(2, '0');
+        // Only show hours within the VFR window
+        const firstH = Math.max(0, Math.floor(vfrStartH));
+        const lastH  = Math.min(23, Math.ceil(vfrEndH));
+        const hourOpts = Array.from({length: lastH - firstH + 1}, (_, i) => {
+            const v = String(firstH + i).padStart(2, '0');
             return `<option value="${v}"${v === defH ? ' selected' : ''}>${v}</option>`;
         }).join('');
         const minOpts = mins.map(m => `<option value="${m}"${m === (defM || '00') ? ' selected' : ''}>${m}</option>`).join('');
