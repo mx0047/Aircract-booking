@@ -38,6 +38,12 @@ class DataStoreImpl {
         localStorage.setItem(PREFIX + key, JSON.stringify(val));
     }
     
+    isBackendEnabled() {
+        if (window.location.hostname.includes('github.io')) return false;
+        if (window.location.protocol === 'file:') return false;
+        return true;
+    }
+    
     init() {
         // Load initially from localStorage as a fast sync cache
         this.users = this.get('users', defaultUsers);
@@ -96,6 +102,13 @@ class DataStoreImpl {
     }
 
     async load() {
+        if (!this.isBackendEnabled()) {
+            // Force reload from local storage just in case it changed in another tab
+            this.users = this.get('users', defaultUsers);
+            this.fleet = this.get('fleet', defaultFleet);
+            this.reservations = this.get('reservations', []);
+            return true;
+        }
         try {
             const response = await fetch('/api/data');
             if (response.ok) {
@@ -154,6 +167,7 @@ class DataStoreImpl {
     }
 
     async saveToServer(type, data) {
+        if (!this.isBackendEnabled()) return;
         try {
             const response = await fetch('/api/save', {
                 method: 'POST',
