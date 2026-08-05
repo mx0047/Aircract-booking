@@ -238,12 +238,14 @@ const Calendar = {
                 const isOwn = currentUser && b.pilotId === currentUser.id;
                 const statusClass = b.status === 'pending' ? 'timeline__booking--pending' : 'timeline__booking--approved';
                 const ownClass    = isOwn ? 'timeline__booking--own' : '';
+                const isPast      = bEnd < new Date();
+                const pastClass   = isPast ? 'timeline__booking--past' : '';
 
                 const ac = DataStore.getFleet().find(a => a.id === b.aircraftId);
                 const acLabel = ac ? ` (${ac.registration})` : '';
 
                 html += `
-                    <div class="timeline__booking ${statusClass} ${ownClass}"
+                    <div class="timeline__booking ${statusClass} ${ownClass} ${pastClass}"
                          style="top: ${topPct}%; height: ${heightPct}%; z-index: 5; min-height: 22px;">
                         <span class="timeline__booking-title">${b.pilotName || 'Pilot'}${acLabel}</span>
                         <span class="timeline__booking-time">${formatT(bStart)} - ${formatT(bEnd)}</span>
