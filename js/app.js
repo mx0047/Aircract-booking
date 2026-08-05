@@ -1,9 +1,9 @@
-import DataStore from './data.js';
-import VFR from './vfr.js';
-import Auth from './auth.js';
-import Booking from './booking.js';
-import Calendar from './calendar.js';
-import Admin from './admin.js';
+import DataStore from './data.js?v=1.0.1';
+import VFR from './vfr.js?v=1.0.1';
+import Auth from './auth.js?v=1.0.1';
+import Booking from './booking.js?v=1.0.1';
+import Calendar from './calendar.js?v=1.0.1';
+import Admin from './admin.js?v=1.0.1';
 
 const App = {
     currentScreen: null,
