@@ -50,12 +50,51 @@ const Booking = {
         const defFrom = `${dateStr}T${timeFromStr || '08:00'}`;
         const defTo = `${dateStr}T${timeToStr || '10:00'}`;
 
+        // Get existing reservations for this day to show occupied slots
+        let existingBookingsHtml = '';
+        if (aircraftId) {
+            const formattedDateStr = dateObj.getFullYear() + '-' + String(dateObj.getMonth() + 1).padStart(2, '0') + '-' + String(dateObj.getDate()).padStart(2, '0');
+            const dayReservations = DataStore.getReservations().filter(r => {
+                const rDateStr = r.dateFrom.split('T')[0];
+                return (aircraftId === 'all' || r.aircraftId === aircraftId) && rDateStr === formattedDateStr && r.status !== 'rejected';
+            });
+            
+            if (dayReservations.length > 0) {
+                // Sort by time
+                dayReservations.sort((a, b) => new Date(a.dateFrom) - new Date(b.dateFrom));
+                const formatT = (isoStr) => {
+                    const d = new Date(isoStr);
+                    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                };
+                
+                existingBookingsHtml = `
+                    <div class="existing-bookings-info" style="margin-bottom: 15px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; font-size: 0.85rem;">
+                        <strong style="color: var(--color-accent); display: block; margin-bottom: 5px;">📅 Rezervácie na tento deň:</strong>
+                        <ul style="margin: 0; padding-left: 15px; color: var(--color-text-secondary); line-height: 1.4;">
+                            ${dayReservations.map(r => {
+                                const ac = DataStore.getFleet().find(a => a.id === r.aircraftId);
+                                const acLabel = ac ? ` [${ac.registration}]` : '';
+                                return `<li>${formatT(r.dateFrom)} - ${formatT(r.dateTo)}: ${r.pilotName}${acLabel}</li>`;
+                            }).join('')}
+                        </ul>
+                    </div>
+                `;
+            } else {
+                existingBookingsHtml = `
+                    <div class="existing-bookings-info" style="margin-bottom: 15px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 10px; border-radius: 8px; font-size: 0.85rem; color: #10b981;">
+                        <strong>✅ Celý deň je zatiaľ voľný.</strong>
+                    </div>
+                `;
+            }
+        }
+
         return `
             <div class="booking-form-container card card--glass" style="padding: 20px; max-width: 480px; margin: 0 auto;">
                 <h3 class="booking-title" style="margin-bottom: 20px; text-align: center;">Nová rezervácia</h3>
                 
                 <form id="booking-form" class="booking-form" data-aircraft-id="${aircraft ? aircraft.id : ''}">
                     ${aircraftSelectorHtml}
+                    ${existingBookingsHtml}
                     <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px;">
                         <div>
                             <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Odlet (Vzlet)</label>
