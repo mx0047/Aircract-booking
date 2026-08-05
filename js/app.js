@@ -663,6 +663,7 @@ const App = {
                 this.renderHeader();
                 this.refreshCurrentScreen();
             });
+        }
     }
 };
 
