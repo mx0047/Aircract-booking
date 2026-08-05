@@ -1,6 +1,7 @@
 import DataStore from './data.js?v=1.0.1';
 import VFR from './vfr.js?v=1.0.1';
 import Booking from './booking.js?v=1.0.1';
+import Auth from './auth.js?v=1.0.1';
 
 let currentDate = new Date();
 let selectedDate = new Date();
