@@ -193,27 +193,58 @@ const Admin = {
 
     renderFleetManagement() {
         const fleet = DataStore.getFleet();
-        
+        const reasonLabels = {
+            maintenance: '🔧 Údržba',
+            breakdown:   '⚠️ Porucha',
+            inspection:  '🔍 Technická prehliadka',
+            other:       '📋 Iný dôvod'
+        };
+
         return `
             <div class="admin__section">
                 <h3 class="admin__section-title">Lietadlá vo flotile</h3>
                 <div class="admin__fleet-list">
-                    ${fleet.map(a => `
+                    ${fleet.map(a => {
+                        const isActive = a.status === 'active';
+                        const reasonLabel = a.deactivationReason ? (reasonLabels[a.deactivationReason] || a.deactivationReason) : '';
+                        const reasonNote  = a.deactivationNote ? ` — ${a.deactivationNote}` : '';
+                        return `
                         <div class="admin__fleet-card card">
                             <div class="card__header">
                                 <h4 class="card__title">${a.type} ${a.registration}</h4>
-                                <span class="badge ${a.status === 'active' ? 'badge--success' : 'badge--neutral'}">
-                                    ${a.status === 'active' ? 'Aktívne' : 'Neaktívne'}
+                                <span class="badge ${isActive ? 'badge--success' : 'badge--error'}">
+                                    ${isActive ? 'Aktívne' : 'Mimo prevádzky'}
                                 </span>
                             </div>
                             <div class="card__body">
                                 <p><strong>Počet sedadiel:</strong> ${a.seats}</p>
+                                ${!isActive && reasonLabel ? `<p style="color:var(--color-warning);font-size:0.88rem;margin-top:4px;"><strong>Dôvod:</strong> ${reasonLabel}${reasonNote}</p>` : ''}
                             </div>
-                            <div class="admin__actions">
+                            <!-- Inline deactivation form (hidden by default) -->
+                            <div id="deactivate-form-${a.id}" style="display:none; margin-top:10px; background:rgba(239,68,68,0.07); border:1px solid rgba(239,68,68,0.2); border-radius:8px; padding:12px;">
+                                <p style="font-size:0.85rem;margin-bottom:8px;font-weight:600;">Dôvod deaktivácie:</p>
+                                <select id="deactivate-reason-${a.id}" class="form-input" style="width:100%;margin-bottom:8px;">
+                                    <option value="maintenance">🔧 Údržba</option>
+                                    <option value="breakdown">⚠️ Porucha</option>
+                                    <option value="inspection">🔍 Technická prehliadka</option>
+                                    <option value="other">📋 Iný dôvod</option>
+                                </select>
+                                <input type="text" id="deactivate-note-${a.id}" class="form-input" placeholder="Voliteľná poznámka..." style="width:100%;margin-bottom:8px;font-size:0.85rem;">
+                                <div style="display:flex;gap:8px;">
+                                    <button class="btn btn--danger admin__btn-confirm-deactivate" data-id="${a.id}" style="flex:1;">Potvrdiť</button>
+                                    <button class="btn btn--outline admin__btn-cancel-deactivate" data-id="${a.id}" style="flex:1;">Zrušiť</button>
+                                </div>
+                            </div>
+                            <div class="admin__actions" id="fleet-actions-${a.id}">
+                                ${isActive
+                                    ? `<button class="btn btn--outline admin__btn-deactivate-aircraft" data-id="${a.id}" style="border-color:var(--color-warning);color:var(--color-warning);">⏸ Deaktivovať</button>`
+                                    : `<button class="btn btn--outline admin__btn-activate-aircraft" data-id="${a.id}" style="border-color:var(--color-success);color:var(--color-success);">▶ Aktivovať</button>`
+                                }
                                 <button class="btn btn--danger admin__btn-remove-aircraft" data-id="${a.id}">Odstrániť</button>
                             </div>
                         </div>
-                    `).join('')}
+                        `;
+                    }).join('')}
                 </div>
             </div>
             
@@ -285,6 +316,15 @@ const Admin = {
         const newRole = currentRole === 'deputy' ? 'pilot' : 'deputy';
         DataStore.updateUser(id, { role: newRole });
         window.dispatchEvent(new CustomEvent('user-updated'));
+    },
+
+    toggleAircraftStatus(id, currentStatus, reason, note) {
+        if (currentStatus === 'active') {
+            DataStore.updateAircraft(id, { status: 'inactive', deactivationReason: reason, deactivationNote: note || '' });
+        } else {
+            DataStore.updateAircraft(id, { status: 'active', deactivationReason: null, deactivationNote: '' });
+        }
+        window.dispatchEvent(new CustomEvent('fleet-updated'));
     },
 
     removeAircraft(id) {
@@ -402,6 +442,36 @@ const Admin = {
                 }
             }
             
+            // Deactivate aircraft — show inline form
+            if (e.target.closest('.admin__btn-deactivate-aircraft')) {
+                const id = e.target.closest('.admin__btn-deactivate-aircraft').dataset.id;
+                document.getElementById(`deactivate-form-${id}`).style.display = 'block';
+                document.getElementById(`fleet-actions-${id}`).style.display = 'none';
+            }
+
+            // Activate aircraft (no reason needed)
+            if (e.target.closest('.admin__btn-activate-aircraft')) {
+                const id = e.target.closest('.admin__btn-activate-aircraft').dataset.id;
+                const fleet = DataStore.getFleet();
+                const ac = fleet.find(a => a.id === id);
+                if (ac) this.toggleAircraftStatus(id, 'inactive');
+            }
+
+            // Confirm deactivation
+            if (e.target.closest('.admin__btn-confirm-deactivate')) {
+                const id = e.target.closest('.admin__btn-confirm-deactivate').dataset.id;
+                const reason = document.getElementById(`deactivate-reason-${id}`).value;
+                const note   = document.getElementById(`deactivate-note-${id}`).value;
+                this.toggleAircraftStatus(id, 'active', reason, note);
+            }
+
+            // Cancel deactivation
+            if (e.target.closest('.admin__btn-cancel-deactivate')) {
+                const id = e.target.closest('.admin__btn-cancel-deactivate').dataset.id;
+                document.getElementById(`deactivate-form-${id}`).style.display = 'none';
+                document.getElementById(`fleet-actions-${id}`).style.display = 'flex';
+            }
+
             // Remove aircraft
             if (e.target.closest('.admin__btn-remove-aircraft')) {
                 const id = e.target.closest('.admin__btn-remove-aircraft').dataset.id;
