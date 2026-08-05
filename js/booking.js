@@ -45,20 +45,36 @@ const Booking = {
             timeToStr = `${String(nextH).padStart(2, '0')}:00`;
         }
         
+        const reasonLabels = { maintenance: '🔧 Údržba', breakdown: '⚠️ Porucha', inspection: '🔍 Techn. prehliadka', other: '📋 Iný dôvod' };
+
         let aircraftSelectorHtml = '';
         if (aircraft) {
+            const isInactive = aircraft.status !== 'active';
+            const reason = aircraft.deactivationReason ? (reasonLabels[aircraft.deactivationReason] || aircraft.deactivationReason) : '';
+            const note   = aircraft.deactivationNote ? ` — ${aircraft.deactivationNote}` : '';
             aircraftSelectorHtml = `
                 <div class="booking-aircraft-info" style="margin-bottom: 15px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
                     <strong>Lietadlo:</strong> ${aircraft.type} (${aircraft.registration})
+                    ${isInactive ? `<span style="margin-left:8px;color:var(--color-error);font-size:0.85rem;font-weight:600;">⛔ Mimo prevádzky${reason ? ': ' + reason + note : ''}</span>` : ''}
                 </div>
+                ${isInactive ? `<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:12px;color:var(--color-error);font-size:0.9rem;">
+                    <strong>⛔ Toto lietadlo je momentálne nedostupné</strong><br>${reason ? reason + note : 'Lietadlo nie je v prevádzke.'}
+                    <br><small style="opacity:0.75;">Kontaktujte správcu pre viac informácií.</small>
+                </div>` : ''}
             `;
         } else {
-            const activeFleet = DataStore.getFleet().filter(a => a.status === 'active');
+            const allFleet = DataStore.getFleet();
+            const activeFleet = allFleet.filter(a => a.status === 'active');
+            const inactiveFleet = allFleet.filter(a => a.status !== 'active');
             aircraftSelectorHtml = `
                 <div class="form-group">
                     <label for="booking-aircraft-id" class="form-label">Lietadlo</label>
                     <select id="booking-aircraft-id" name="aircraftId" required class="form-input">
                         ${activeFleet.map(a => `<option value="${a.id}">${a.type} (${a.registration})</option>`).join('')}
+                        ${inactiveFleet.map(a => {
+                            const r = a.deactivationReason ? (reasonLabels[a.deactivationReason] || a.deactivationReason) : 'Neaktívne';
+                            return `<option value="${a.id}" disabled style="color:gray;">${a.type} (${a.registration}) — ${r}</option>`;
+                        }).join('')}
                     </select>
                 </div>
             `;
