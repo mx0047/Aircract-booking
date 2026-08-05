@@ -353,7 +353,7 @@ const Booking = {
                 e.preventDefault();
                 
                 let aircraftId = e.target.getAttribute('data-aircraft-id');
-                if (!aircraftId) {
+                if (!aircraftId || aircraftId === 'all') {
                     const selectEl = document.getElementById('booking-aircraft-id');
                     if (selectEl) aircraftId = selectEl.value;
                 }
