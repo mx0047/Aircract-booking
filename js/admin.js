@@ -60,9 +60,9 @@ const Admin = {
         const s = new Date(startIso);
         const e = new Date(endIso);
         const pad = n => n.toString().padStart(2, '0');
-        const sDate = `${pad(s.getDate())}.${pad(s.getMonth()+1)}.${s.getFullYear()}`;
+        const sDate = `${pad(s.getDate())}/${pad(s.getMonth()+1)}/${s.getFullYear()}`;
         const sTime = `${pad(s.getHours())}:${pad(s.getMinutes())}`;
-        const eDate = `${pad(e.getDate())}.${pad(e.getMonth()+1)}.${e.getFullYear()}`;
+        const eDate = `${pad(e.getDate())}/${pad(e.getMonth()+1)}/${e.getFullYear()}`;
         const eTime = `${pad(e.getHours())}:${pad(e.getMinutes())}`;
 
         if (sDate === eDate) {
@@ -127,7 +127,9 @@ const Admin = {
         return `
             <div class="admin__pending-list">
                 ${pending.map(u => {
-                    const regDate = u.registeredAt ? new Date(u.registeredAt).toLocaleDateString('sk-SK') : '-';
+                    const pad = n => n.toString().padStart(2, '0');
+                    const formatDate = d => `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
+                    const regDate = u.registeredAt ? formatDate(new Date(u.registeredAt)) : '-';
                     return `
                     <div class="admin__pending-card card" data-id="${u.id}">
                         <div class="card__header">
