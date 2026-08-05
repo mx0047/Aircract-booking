@@ -842,6 +842,12 @@ img, svg {
   justify-content: center;
 }
 
+.timeline__booking--approved {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.4);
+  border-left-color: #10b981;
+}
+
 .timeline__booking--pending {
   background: rgba(234, 179, 8, 0.2);
   border-color: rgba(234, 179, 8, 0.5);
