@@ -196,15 +196,13 @@ const App = {
                 screenHtml = typeof Booking.renderBookingForm === 'function' ? Booking.renderBookingForm(aircraftId) : '<p>Formulár nie je k dispozícii.</p>';
                 break;
             case 'calendar':
-                if (params && params.aircraftId) {
+                {
+                    const targetAcId = (params && params.aircraftId) ? params.aircraftId : 'all';
                     if (typeof Calendar !== 'undefined' && typeof Calendar.renderCalendarScreen === 'function') {
-                        screenHtml = Calendar.renderCalendarScreen(params.aircraftId);
+                        screenHtml = Calendar.renderCalendarScreen(targetAcId);
                     } else {
                         screenHtml = '<p>Kalendár sa pripravuje...</p>';
                     }
-                } else {
-                    this.navigateTo('aircraft-list');
-                    return;
                 }
                 break;
             case 'my-reservations':
