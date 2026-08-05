@@ -407,13 +407,17 @@ const App = {
             const acName = ac ? `${ac.type} ${ac.registration}` : 'Neznáme lietadlo';
             const pilotName = nextReservation.pilotName || 'Pilot';
             
+            const pad = n => n.toString().padStart(2, '0');
+            const formattedDate = `${pad(start.getDate())}/${pad(start.getMonth()+1)}/${start.getFullYear()}`;
+            const formattedTime = `${pad(start.getHours())}:${pad(start.getMinutes())}`;
+            
             nextResHtml = `
                 <div class="next-reservation-card">
                     <h4>${acName}</h4>
                     <p style="margin-bottom: 6px; font-size: 0.9rem; color: var(--color-text-secondary);">
                         <strong>Pilot:</strong> ${pilotName}
                     </p>
-                    <p style="margin-bottom: 8px;">${start.toLocaleDateString('sk-SK')} o ${start.toLocaleTimeString('sk-SK', {hour:'2-digit', minute:'2-digit', hour12: false})}</p>
+                    <p style="margin-bottom: 8px;">${formattedDate} o ${formattedTime}</p>
                     <span class="badge badge-${nextReservation.status}">${nextReservation.status === 'approved' ? 'Schválená' : 'Čakajúca'}</span>
                 </div>
             `;
