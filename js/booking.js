@@ -364,9 +364,9 @@ const Booking = {
         return new Date(dateTimeStr);
     },
 
-    updateVfrInfo() {
-        const dateInput = document.getElementById('booking-date-from') || document.getElementById('booking-datetime-from');
-        const vfrDisplay = document.getElementById('vfr-info-display');
+    updateVfrInfo(form = null) {
+        const dateInput = form ? form.querySelector('#booking-date-from') : (document.getElementById('booking-date-from') || document.getElementById('booking-datetime-from'));
+        const vfrDisplay = form ? form.querySelector('#vfr-info-display') : document.getElementById('vfr-info-display');
         
         if (dateInput && vfrDisplay && typeof VFR !== 'undefined' && VFR.getVfrWindow) {
             let val = dateInput.value;
@@ -457,12 +457,55 @@ const Booking = {
         });
         
         document.body.addEventListener('change', (e) => {
-            if (e.target.id === 'booking-date-from') {
-                Booking.updateVfrInfo();
-                // Optionally auto-set date-to
-                const dateTo = document.getElementById('booking-date-to');
-                if (dateTo && !dateTo.value) {
-                    dateTo.value = e.target.value;
+            const form = e.target.form;
+            
+            // Auto-align date
+            if (e.target.id === 'booking-date-from' && form) {
+                Booking.updateVfrInfo(form);
+                const dateTo = form.querySelector('#booking-date-to');
+                if (dateTo) {
+                    // Automatically push date-to to at least match date-from
+                    if (!dateTo.value || new Date(dateTo.value) < new Date(e.target.value)) {
+                        dateTo.value = e.target.value;
+                    }
+                }
+            }
+            
+            // Auto-align time (departure hour + 2 hours default)
+            if (e.target.id === 'booking-time-from-h' && form) {
+                const depHour = parseInt(e.target.value, 10);
+                const arrHour = (depHour + 2) % 24;
+                const arrHourStr = String(arrHour).padStart(2, '0');
+                const toHourEl = form.querySelector('#booking-time-to-h');
+                if (toHourEl) {
+                    toHourEl.value = arrHourStr;
+                }
+                
+                // If it wraps to next day, increment arrival date
+                if (depHour + 2 >= 24) {
+                    const depDateEl = form.querySelector('#booking-date-from');
+                    const toDateEl = form.querySelector('#booking-date-to');
+                    if (depDateEl && toDateEl) {
+                        const depDate = new Date(depDateEl.value + 'T00:00:00');
+                        depDate.setDate(depDate.getDate() + 1);
+                        const nextDayStr = depDate.getFullYear() + '-' + String(depDate.getMonth() + 1).padStart(2, '0') + '-' + String(depDate.getDate()).padStart(2, '0');
+                        toDateEl.value = nextDayStr;
+                    }
+                } else {
+                    // Sync date-to back to date-from if it was changed
+                    const depDateEl = form.querySelector('#booking-date-from');
+                    const toDateEl = form.querySelector('#booking-date-to');
+                    if (depDateEl && toDateEl) {
+                        toDateEl.value = depDateEl.value;
+                    }
+                }
+            }
+            
+            // Guard: don't let date-to be earlier than date-from
+            if (e.target.id === 'booking-date-to' && form) {
+                const depDateEl = form.querySelector('#booking-date-from');
+                if (depDateEl && new Date(e.target.value) < new Date(depDateEl.value)) {
+                    e.target.value = depDateEl.value;
                 }
             }
         });
