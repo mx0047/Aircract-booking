@@ -147,7 +147,7 @@ const Calendar = {
             const isSelected = selectedDate.getFullYear() === year && selectedDate.getMonth() === month && selectedDate.getDate() === day;
             
             const hasBooking = DataStore.getReservations().some(b => {
-                return b.aircraftId === aircraftId && this.formatDateStr(new Date(b.dateFrom)) === dateStr && b.status !== 'rejected';
+                return (aircraftId === 'all' || b.aircraftId === aircraftId) && this.formatDateStr(new Date(b.dateFrom)) === dateStr && b.status !== 'rejected';
             });
 
             let classes = 'calendar__day';
@@ -204,9 +204,9 @@ const Calendar = {
         
         const bookings = DataStore.getReservations().filter(b => {
             const bDateStr = this.formatDateStr(new Date(b.dateFrom));
-            return b.aircraftId === aircraftId && bDateStr === dateStr && b.status !== 'rejected';
+            return (aircraftId === 'all' || b.aircraftId === aircraftId) && bDateStr === dateStr && b.status !== 'rejected';
         });
-        const currentUser = DataStore.getCurrentUser();
+        const currentUser = Auth.getCurrentUser();
 
         for (let hour = startHour; hour <= endHour; hour++) {
             const isNight = hour < Math.floor(vfrStart) || hour >= Math.ceil(vfrEnd);
@@ -248,10 +248,13 @@ const Calendar = {
                 const statusClass = b.status === 'pending' ? 'timeline__booking--pending' : 'timeline__booking--approved';
                 const ownClass    = isOwn ? 'timeline__booking--own' : '';
 
+                const ac = DataStore.getFleet().find(a => a.id === b.aircraftId);
+                const acLabel = ac ? ` (${ac.registration})` : '';
+
                 html += `
                     <div class="timeline__booking ${statusClass} ${ownClass}"
                          style="top: ${topPct}%; height: ${heightPct}%; z-index: 5; min-height: 22px;">
-                        <span class="timeline__booking-title">${b.pilotName || 'Pilot'}</span>
+                        <span class="timeline__booking-title">${b.pilotName || 'Pilot'}${acLabel}</span>
                         <span class="timeline__booking-time">${formatT(bStart)} - ${formatT(bEnd)}</span>
                     </div>
                 `;
@@ -290,9 +293,24 @@ const Calendar = {
         const month = currentDate.getMonth();
         const dateStr = this.formatDateStr(selectedDate);
         
-        const aircraft = DataStore.getFleet().find(a => a.id === currentAircraftId);
+        const isAll = currentAircraftId === 'all';
+        const aircraft = !isAll ? DataStore.getFleet().find(a => a.id === currentAircraftId) : null;
         const reg = aircraft ? aircraft.registration : '';
         const type = aircraft ? aircraft.type : '';
+        const titleText = isAll ? '✈️ Rýchla rezervácia' : `✈️ Rýchla rezervácia (${type} ${reg})`;
+
+        let aircraftSelectHtml = '';
+        if (isAll) {
+            const activeFleet = DataStore.getFleet().filter(a => a.status === 'active');
+            aircraftSelectHtml = `
+                <div style="margin-bottom: 10px;">
+                    <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Lietadlo</label>
+                    <select id="booking-aircraft-id" name="aircraftId" required class="form-input" style="padding: 8px 10px; font-size: 0.9rem; width: 100%;">
+                        ${activeFleet.map(a => `<option value="${a.id}">${a.type} (${a.registration})</option>`).join('')}
+                    </select>
+                </div>
+            `;
+        }
 
         // Default times
         const timeFrom = "08:00";
@@ -305,9 +323,10 @@ const Calendar = {
                 <!-- Quick Booking Form Box -->
                 <div class="quick-booking card card--glass" style="margin: 15px; padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
                     <h3 style="font-size: 1.1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                        ✈️ Rýchla rezervácia (${type} ${reg})
+                        ${titleText}
                     </h3>
                     <form id="booking-form" class="booking-form" data-aircraft-id="${currentAircraftId}">
+                        ${aircraftSelectHtml}
                         <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px;">
                             <div>
                                 <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Odlet (Vzlet)</label>
