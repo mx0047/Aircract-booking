@@ -7,8 +7,8 @@ const Auth = {
         return `
             <div class="login-screen">
                 <header class="login__logo-container">
-                    <img src="img/logo-spacek.png" alt="ŠPAČEK" class="login__logo" onerror="this.style.display='none';">
-                    <h1 class="login__title" style="display:none;">ŠPAČEK</h1>
+                    <img src="img/logo-spacek.png" alt="SPACEK" class="login__logo" onerror="this.style.display='none';">
+                    <h1 class="login__title" style="display:none;">SPACEK</h1>
                     <h2 class="login__title">Rezervačný Systém</h2>
                     <p class="login__subtitle">Holíč LZHL</p>
                 </header>
