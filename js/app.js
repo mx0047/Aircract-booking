@@ -248,8 +248,9 @@ const App = {
             
             // Post-render init
             if (screen === 'calendar' && typeof Calendar !== 'undefined' && typeof Calendar.setAircraftId === 'function') {
-                 Calendar.setAircraftId(params.aircraftId);
-                 if (params.date && typeof Calendar.setSelectedDate === 'function') {
+                 const acId = (params && params.aircraftId) ? params.aircraftId : 'all';
+                 Calendar.setAircraftId(acId);
+                 if (params && params.date && typeof Calendar.setSelectedDate === 'function') {
                      Calendar.setSelectedDate(params.date);
                  }
             }
