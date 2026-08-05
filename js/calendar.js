@@ -190,8 +190,9 @@ const Calendar = {
                 <div class="timeline__grid">
         `;
 
-        const startHour = 4;
-        const endHour = 22;
+        // Compute VFR-based start/end hours for the timeline
+        const startHour = Math.max(0, Math.floor(vfrStart) - 1); // 1 hour before VFR
+        const endHour   = Math.min(23, Math.ceil(vfrEnd));        // to the VFR end hour
         
         const bookings = DataStore.getReservations().filter(b => {
             const bDateStr = this.formatDateStr(new Date(b.dateFrom));
@@ -264,11 +265,14 @@ const Calendar = {
         return html;
     },
 
-    buildTimeSelectHtml(idPrefix, defaultTime) {
+    buildTimeSelectHtml(idPrefix, defaultTime, vfrStartH = 0, vfrEndH = 23) {
         const [defH, defM] = (defaultTime || '08:00').split(':');
         const mins = ['00','05','10','15','20','25','30','35','40','45','50','55'];
-        const hourOpts = Array.from({length: 24}, (_, i) => {
-            const v = String(i).padStart(2, '0');
+        // Only show hours within the VFR window
+        const firstH = Math.max(0, Math.floor(vfrStartH));
+        const lastH  = Math.min(23, Math.ceil(vfrEndH));
+        const hourOpts = Array.from({length: lastH - firstH + 1}, (_, i) => {
+            const v = String(firstH + i).padStart(2, '0');
             return `<option value="${v}"${v === defH ? ' selected' : ''}>${v}</option>`;
         }).join('');
         const minOpts = mins.map(m => `<option value="${m}"${m === (defM || '00') ? ' selected' : ''}>${m}</option>`).join('');
