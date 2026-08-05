@@ -27,7 +27,12 @@ class DataStoreImpl {
     get(key, def) {
         try {
             const val = localStorage.getItem(PREFIX + key);
-            return val ? JSON.parse(val) : def;
+            if (!val) return def;
+            const parsed = JSON.parse(val);
+            if (Array.isArray(def) && !Array.isArray(parsed)) {
+                return def;
+            }
+            return parsed;
         } catch (e) {
             console.error('Error parsing local storage data for', key, e);
             return def;
