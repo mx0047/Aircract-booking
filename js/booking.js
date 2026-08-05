@@ -354,20 +354,20 @@ const Booking = {
                 
                 let aircraftId = e.target.getAttribute('data-aircraft-id');
                 if (!aircraftId || aircraftId === 'all') {
-                    const selectEl = document.getElementById('booking-aircraft-id');
+                    const selectEl = e.target.querySelector('#booking-aircraft-id');
                     if (selectEl) aircraftId = selectEl.value;
                 }
                 
                 let start, end;
-                const dtFromEl = document.getElementById('booking-datetime-from');
-                const dtToEl = document.getElementById('booking-datetime-to');
+                const dtFromEl = e.target.querySelector('#booking-datetime-from');
+                const dtToEl = e.target.querySelector('#booking-datetime-to');
 
                 // Helper: read time from select dropdowns or fallback to time input
                 const getTimeVal = (prefix) => {
-                    const hEl = document.getElementById(prefix + '-h');
-                    const mEl = document.getElementById(prefix + '-m');
+                    const hEl = e.target.querySelector('#' + prefix + '-h');
+                    const mEl = e.target.querySelector('#' + prefix + '-m');
                     if (hEl && mEl) return `${hEl.value}:${mEl.value}`;
-                    const tEl = document.getElementById(prefix);
+                    const tEl = e.target.querySelector('#' + prefix);
                     return tEl ? tEl.value : '00:00';
                 };
                 
@@ -375,9 +375,9 @@ const Booking = {
                     start = Booking.parseDateTime(dtFromEl.value);
                     end = Booking.parseDateTime(dtToEl.value);
                 } else {
-                    const dateFrom = document.getElementById('booking-date-from').value;
+                    const dateFrom = e.target.querySelector('#booking-date-from').value;
                     const timeFrom = getTimeVal('booking-time-from');
-                    const dateTo = document.getElementById('booking-date-to').value;
+                    const dateTo = e.target.querySelector('#booking-date-to').value;
                     const timeTo = getTimeVal('booking-time-to');
                     
                     start = Booking.parseDateTime(dateFrom, timeFrom);
@@ -388,8 +388,8 @@ const Booking = {
                     aircraftId,
                     dateFrom: start,
                     dateTo: end,
-                    purpose: document.getElementById('booking-purpose').value,
-                    note: document.getElementById('booking-note').value
+                    purpose: e.target.querySelector('#booking-purpose').value,
+                    note: e.target.querySelector('#booking-note').value
                 };
                 
                 const result = Booking.createReservation(data);
