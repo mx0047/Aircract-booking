@@ -24,6 +24,17 @@
     
     <!-- Styles -->
     <link rel="stylesheet" href="css/styles.css?v=1.0.1">
+    
+    <!-- Error Catcher -->
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            alert("CHYBA: " + message + "\nSúbor: " + source + "\nRiadok: " + lineno);
+            return false;
+        };
+        window.addEventListener('unhandledrejection', function(event) {
+            alert("CHYBA (Promise): " + event.reason);
+        });
+    </script>
 </head>
 <body>
     <div id="app"></div>
