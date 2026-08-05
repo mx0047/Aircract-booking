@@ -17,7 +17,11 @@ const Booking = {
         if (!(dateObj instanceof Date) || isNaN(dateObj.getTime())) {
             dateObj = new Date();
         }
-        const dateStr = dateObj.toISOString().split('T')[0];
+        const dateStr = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD for internal use
+        const dd = String(dateObj.getDate()).padStart(2, '0');
+        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const yyyy = dateObj.getFullYear();
+        const dateDisplayStr = `${dd}/${mm}/${yyyy}`; // DD/MM/YYYY for display
         
         let timeFromStr = '';
         let timeToStr = '';
@@ -99,14 +103,14 @@ const Booking = {
                         <div>
                             <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Odlet (Vzlet)</label>
                             <div style="display: grid; grid-template-columns: 1fr auto auto auto; gap: 6px; align-items: center;">
-                                <input type="date" id="booking-date-from" name="dateFrom" required class="form-input" value="${dateStr}" style="padding: 8px 10px; font-size: 0.9rem;">
+                                <input type="text" id="booking-date-from" name="dateFrom" required class="form-input" value="${dateDisplayStr}" placeholder="DD/MM/RRRR" maxlength="10" inputmode="numeric" style="padding: 8px 10px; font-size: 0.9rem; width: 130px;">
                                 ${Booking.buildTimeSelectHtml('booking-time-from', timeFromStr || '08:00')}
                             </div>
                         </div>
                         <div>
                             <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px; display:block;">Prílet (Pristátie)</label>
                             <div style="display: grid; grid-template-columns: 1fr auto auto auto; gap: 6px; align-items: center;">
-                                <input type="date" id="booking-date-to" name="dateTo" required class="form-input" value="${dateStr}" style="padding: 8px 10px; font-size: 0.9rem;">
+                                <input type="text" id="booking-date-to" name="dateTo" required class="form-input" value="${dateDisplayStr}" placeholder="DD/MM/RRRR" maxlength="10" inputmode="numeric" style="padding: 8px 10px; font-size: 0.9rem; width: 130px;">
                                 ${Booking.buildTimeSelectHtml('booking-time-to', timeToStr || '10:00')}
                             </div>
                         </div>
@@ -345,11 +349,40 @@ const Booking = {
         `;
     },
 
+    // Convert DD/MM/YYYY string to a Date object (returns Invalid Date if malformed)
+    parseDMY(str) {
+        if (!str) return new Date(NaN);
+        // Accept DD/MM/YYYY or DD.MM.YYYY
+        const m = str.match(/^(\d{1,2})[/\.](\d{1,2})[/\.](\d{4})$/);
+        if (m) {
+            return new Date(parseInt(m[3],10), parseInt(m[2],10)-1, parseInt(m[1],10));
+        }
+        // Fallback: try YYYY-MM-DD
+        return new Date(str);
+    },
+
+    // Convert DD/MM/YYYY → YYYY-MM-DD (for internal date math)
+    dmyToIso(str) {
+        if (!str) return '';
+        const m = str.match(/^(\d{1,2})[/\.](\d{1,2})[/\.](\d{4})$/);
+        if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+        return str; // already ISO or fallback
+    },
+
+    // Convert YYYY-MM-DD or Date → DD/MM/YYYY display string
+    isoToDmy(isoOrDate) {
+        let d = isoOrDate instanceof Date ? isoOrDate : new Date(isoOrDate + 'T00:00:00');
+        if (isNaN(d.getTime())) return isoOrDate;
+        return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+    },
+
     parseDateTime(dateStr, timeStr = null) {
         if (!dateStr) return new Date(NaN);
-        let dateTimeStr = dateStr;
+        // Convert DD/MM/YYYY → YYYY-MM-DD if needed
+        const isoDate = Booking.dmyToIso(dateStr);
+        let dateTimeStr = isoDate;
         if (timeStr) {
-            dateTimeStr = `${dateStr}T${timeStr}`;
+            dateTimeStr = `${isoDate}T${timeStr}`;
         }
         if (dateTimeStr.includes('T')) {
             const parts = dateTimeStr.split('T');
@@ -375,10 +408,9 @@ const Booking = {
         
         if (dateInput && vfrDisplay && typeof VFR !== 'undefined' && VFR.getVfrWindow) {
             let val = dateInput.value;
-            if (val.includes('T')) {
-                val = val.split('T')[0];
-            }
-            const date = new Date(val);
+            if (val.includes('T')) val = val.split('T')[0];
+            // Parse DD/MM/YYYY or YYYY-MM-DD
+            const date = Booking.parseDMY(val);
             if (!isNaN(date.getTime())) {
                 const w = VFR.getVfrWindow(date);
                 if (w && w.sunrise && w.sunset) {
@@ -460,22 +492,34 @@ const Booking = {
                 }
             }
         });
-        
+
+        document.body.addEventListener('input', (e) => {
+            // Auto-format date text inputs: insert '/' after day and month digits
+            if (e.target.id === 'booking-date-from' || e.target.id === 'booking-date-to') {
+                let v = e.target.value.replace(/[^\d]/g, ''); // digits only
+                if (v.length > 8) v = v.slice(0, 8);
+                if (v.length >= 5) v = v.slice(0,2) + '/' + v.slice(2,4) + '/' + v.slice(4);
+                else if (v.length >= 3) v = v.slice(0,2) + '/' + v.slice(2);
+                e.target.value = v;
+            }
+        });
+
         document.body.addEventListener('change', (e) => {
             const form = e.target.form;
-            
+
             // Auto-align date
             if (e.target.id === 'booking-date-from' && form) {
                 Booking.updateVfrInfo(form);
                 const dateTo = form.querySelector('#booking-date-to');
                 if (dateTo) {
-                    // Automatically push date-to to at least match date-from
-                    if (!dateTo.value || new Date(dateTo.value) < new Date(e.target.value)) {
+                    const fromDate = Booking.parseDMY(e.target.value);
+                    const toDate = Booking.parseDMY(dateTo.value);
+                    if (!dateTo.value || isNaN(toDate.getTime()) || toDate < fromDate) {
                         dateTo.value = e.target.value;
                     }
                 }
             }
-            
+
             // Auto-align time (departure hour + 2 hours default)
             if (e.target.id === 'booking-time-from-h' && form) {
                 const depHour = parseInt(e.target.value, 10);
@@ -485,19 +529,19 @@ const Booking = {
                 if (toHourEl) {
                     toHourEl.value = arrHourStr;
                 }
-                
+
                 // If it wraps to next day, increment arrival date
                 if (depHour + 2 >= 24) {
                     const depDateEl = form.querySelector('#booking-date-from');
                     const toDateEl = form.querySelector('#booking-date-to');
                     if (depDateEl && toDateEl) {
-                        const depDate = new Date(depDateEl.value + 'T00:00:00');
-                        depDate.setDate(depDate.getDate() + 1);
-                        const nextDayStr = depDate.getFullYear() + '-' + String(depDate.getMonth() + 1).padStart(2, '0') + '-' + String(depDate.getDate()).padStart(2, '0');
-                        toDateEl.value = nextDayStr;
+                        const depDate = Booking.parseDMY(depDateEl.value);
+                        if (!isNaN(depDate.getTime())) {
+                            depDate.setDate(depDate.getDate() + 1);
+                            toDateEl.value = Booking.isoToDmy(depDate);
+                        }
                     }
                 } else {
-                    // Sync date-to back to date-from if it was changed
                     const depDateEl = form.querySelector('#booking-date-from');
                     const toDateEl = form.querySelector('#booking-date-to');
                     if (depDateEl && toDateEl) {
@@ -505,12 +549,16 @@ const Booking = {
                     }
                 }
             }
-            
+
             // Guard: don't let date-to be earlier than date-from
             if (e.target.id === 'booking-date-to' && form) {
                 const depDateEl = form.querySelector('#booking-date-from');
-                if (depDateEl && new Date(e.target.value) < new Date(depDateEl.value)) {
-                    e.target.value = depDateEl.value;
+                if (depDateEl) {
+                    const fromDate = Booking.parseDMY(depDateEl.value);
+                    const toDate = Booking.parseDMY(e.target.value);
+                    if (!isNaN(fromDate.getTime()) && !isNaN(toDate.getTime()) && toDate < fromDate) {
+                        e.target.value = depDateEl.value;
+                    }
                 }
             }
         });
@@ -518,3 +566,4 @@ const Booking = {
 };
 
 export default Booking;
+
