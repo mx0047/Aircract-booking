@@ -254,6 +254,11 @@ const App = {
                      Calendar.setSelectedDate(params.date);
                  }
             }
+            if (screen === 'login') {
+                if (typeof Auth !== 'undefined' && typeof Auth.initLoginBiometrics === 'function') {
+                    Auth.initLoginBiometrics();
+                }
+            }
         });
         
         this.updateBadges();
@@ -613,9 +618,51 @@ const App = {
                     </div>
                     <button type="submit" class="btn btn--primary btn--full" style="padding: 10px; font-size: 1rem; margin-top: 5px;">Uložiť zmeny</button>
                 </form>
+                
+                <div id="profile-biometrics-section" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; display: none;">
+                    <label class="form-label" style="font-size: 0.85rem; margin-bottom: 8px; display:block; font-weight: 600;">Biometrické prihlasovanie</label>
+                    <button type="button" id="btn-profile-register-biometrics" class="btn btn--outline btn--full" style="padding: 10px; font-size: 0.95rem; font-weight:600; display: flex; align-items: center; justify-content: center; gap: 8px; border-color: var(--color-accent); color: var(--color-accent); background: transparent;">
+                        <span>👤</span> Aktivovať Face ID / Biometriu
+                    </button>
+                    <p id="profile-biometrics-status" style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 6px; text-align: center;"></p>
+                </div>
             `,
             actions: []
         });
+
+        // Check and show biometrics setup
+        if (typeof Auth !== 'undefined' && typeof Auth.isBiometricsAvailable === 'function') {
+            Auth.isBiometricsAvailable().then(available => {
+                const section = document.getElementById('profile-biometrics-section');
+                if (section && available) {
+                    section.style.display = 'block';
+                    const statusEl = document.getElementById('profile-biometrics-status');
+                    const btn = document.getElementById('btn-profile-register-biometrics');
+                    
+                    if (user.biometrics) {
+                        statusEl.innerHTML = `✅ Face ID / Biometria je aktívna na tomto zariadení.`;
+                        if (btn) btn.innerHTML = '<span>🔄</span> Znova aktivovať Face ID / Biometriu';
+                    } else {
+                        statusEl.innerHTML = 'Biometria na tomto zariadení nie je zatiaľ aktivovaná.';
+                    }
+                }
+            });
+        }
+
+        // Setup biometrics register click handler
+        const bioBtn = document.getElementById('btn-profile-register-biometrics');
+        if (bioBtn) {
+            bioBtn.addEventListener('click', async () => {
+                try {
+                    await Auth.registerBiometrics();
+                    this.showToast('Face ID / Biometria úspešne aktivovaná na tomto zariadení!', 'success');
+                    this.showProfileModal(); // Re-render modal
+                } catch (err) {
+                    console.error('Biometric registration error:', err);
+                    this.showToast(err.message || 'Nepodarilo sa aktivovať biometriu.', 'error');
+                }
+            });
+        }
 
         // Setup submit event listener for profile-edit-form
         const form = document.getElementById('profile-edit-form');
