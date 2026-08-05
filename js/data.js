@@ -1,13 +1,13 @@
 const PREFIX = 'aircraft-booking-';
 
 const defaultUsers = [
-    { id: 'u1', name: 'Igor Špaček', role: 'owner', pin: '0000', approved: true, status: 'active' },
+    { id: 'u1', name: 'Igor Spacek', role: 'owner', pin: '0000', approved: true, status: 'active' },
     { id: 'u2', name: 'Martin Smejkal', role: 'deputy', pin: '9999', approved: true, status: 'active' },
-    { id: 'u3', name: 'Martin Otáhal', role: 'pilot', pin: '1234', approved: true, status: 'active' },
+    { id: 'u3', name: 'Martin Otahal', role: 'pilot', pin: '1234', approved: true, status: 'active' },
     { id: 'u5', name: 'Miro Skuba', role: 'pilot', pin: '3195', approved: true, status: 'active' },
-    { id: 'u6', name: 'Ivo Otáhal', role: 'pilot', pin: '0000', approved: true, status: 'active' },
-    { id: 'u7', name: 'Miro Stašák', role: 'pilot', pin: '0000', approved: true, status: 'active' },
-    { id: 'u8', name: 'Erik Čermák', role: 'pilot', pin: '0000', approved: true, status: 'active' }
+    { id: 'u6', name: 'Ivo Otahal', role: 'pilot', pin: '0000', approved: true, status: 'active' },
+    { id: 'u7', name: 'Miro Stasak', role: 'pilot', pin: '0000', approved: true, status: 'active' },
+    { id: 'u8', name: 'Erik Cermak', role: 'pilot', pin: '0000', approved: true, status: 'active' }
 ];
 
 const defaultFleet = [
@@ -72,37 +72,59 @@ class DataStoreImpl {
             updated = true;
         }
 
-        // Migration: ensure Ivo Otáhal exists
-        const hasIvo = this.users.some(u => u.name === 'Ivo Otáhal');
+        // Migration: ensure Ivo Otahal exists
+        const hasIvo = this.users.some(u => u.name === 'Ivo Otahal' || u.name === 'Ivo Otáhal');
         if (!hasIvo) {
-            this.users.push({ id: 'u6', name: 'Ivo Otáhal', role: 'pilot', pin: '0000', approved: true, status: 'active' });
+            this.users.push({ id: 'u6', name: 'Ivo Otahal', role: 'pilot', pin: '0000', approved: true, status: 'active' });
             updated = true;
         }
-
-        // Migration: ensure Miro Stašák exists
-        const hasMiroStasak = this.users.some(u => u.name === 'Miro Stašák');
+ 
+        // Migration: ensure Miro Stasak exists
+        const hasMiroStasak = this.users.some(u => u.name === 'Miro Stasak' || u.name === 'Miro Stašák');
         if (!hasMiroStasak) {
-            this.users.push({ id: 'u7', name: 'Miro Stašák', role: 'pilot', pin: '0000', approved: true, status: 'active' });
+            this.users.push({ id: 'u7', name: 'Miro Stasak', role: 'pilot', pin: '0000', approved: true, status: 'active' });
             updated = true;
         }
-
-        // Migration: ensure Erik Čermák exists
-        const hasErik = this.users.some(u => u.name === 'Erik Čermák');
+ 
+        // Migration: ensure Erik Cermak exists
+        const hasErik = this.users.some(u => u.name === 'Erik Cermak' || u.name === 'Erik Čermák');
         if (!hasErik) {
-            this.users.push({ id: 'u8', name: 'Erik Čermák', role: 'pilot', pin: '0000', approved: true, status: 'active' });
+            this.users.push({ id: 'u8', name: 'Erik Cermak', role: 'pilot', pin: '0000', approved: true, status: 'active' });
             updated = true;
         }
+ 
+        const renameMap = {
+            'Igor Špaček': 'Igor Spacek',
+            'Martin Otáhal': 'Martin Otahal',
+            'Ivo Otáhal': 'Ivo Otahal',
+            'Miro Stašák': 'Miro Stasak',
+            'Erik Čermák': 'Erik Cermak'
+        };
 
         this.users.forEach(u => {
+            if (renameMap[u.name]) {
+                u.name = renameMap[u.name];
+                updated = true;
+            }
             if (!u.status) {
                 u.status = u.approved ? 'active' : 'pending';
                 updated = true;
             }
             if (u.id === 'u2' && u.name === 'Mária Kováčová') { u.name = 'Martin Smejkal'; updated = true; }
-            if (u.id === 'u3' && u.name === 'Ján Novák') { u.name = 'Martin Otáhal'; updated = true; }
+            if (u.id === 'u3' && u.name === 'Ján Novák') { u.name = 'Martin Otahal'; updated = true; }
         });
+
+        // Migrate reservations
+        this.reservations.forEach(r => {
+            if (renameMap[r.pilotName]) {
+                r.pilotName = renameMap[r.pilotName];
+                updated = true;
+            }
+        });
+
         if (updated) {
             this.set('users', this.users);
+            this.set('reservations', this.reservations);
         }
     }
 
@@ -134,34 +156,58 @@ class DataStoreImpl {
                     wasMigrated = true;
                 }
 
-                // Migration: ensure Ivo Otáhal exists
-                const hasIvo = this.users.some(u => u.name === 'Ivo Otáhal');
+                // Migration: ensure Ivo Otahal exists
+                const hasIvo = this.users.some(u => u.name === 'Ivo Otahal' || u.name === 'Ivo Otáhal');
                 if (!hasIvo) {
-                    this.users.push({ id: 'u6', name: 'Ivo Otáhal', role: 'pilot', pin: '0000', approved: true, status: 'active' });
+                    this.users.push({ id: 'u6', name: 'Ivo Otahal', role: 'pilot', pin: '0000', approved: true, status: 'active' });
                     wasMigrated = true;
                 }
-
-                // Migration: ensure Miro Stašák exists
-                const hasMiroStasak = this.users.some(u => u.name === 'Miro Stašák');
+ 
+                // Migration: ensure Miro Stasak exists
+                const hasMiroStasak = this.users.some(u => u.name === 'Miro Stasak' || u.name === 'Miro Stašák');
                 if (!hasMiroStasak) {
-                    this.users.push({ id: 'u7', name: 'Miro Stašák', role: 'pilot', pin: '0000', approved: true, status: 'active' });
+                    this.users.push({ id: 'u7', name: 'Miro Stasak', role: 'pilot', pin: '0000', approved: true, status: 'active' });
                     wasMigrated = true;
                 }
-
-                // Migration: ensure Erik Čermák exists
-                const hasErik = this.users.some(u => u.name === 'Erik Čermák');
+ 
+                // Migration: ensure Erik Cermak exists
+                const hasErik = this.users.some(u => u.name === 'Erik Cermak' || u.name === 'Erik Čermák');
                 if (!hasErik) {
-                    this.users.push({ id: 'u8', name: 'Erik Čermák', role: 'pilot', pin: '0000', approved: true, status: 'active' });
+                    this.users.push({ id: 'u8', name: 'Erik Cermak', role: 'pilot', pin: '0000', approved: true, status: 'active' });
                     wasMigrated = true;
                 }
 
+                // Rename mapping migration
+                const renameMap = {
+                    'Igor Špaček': 'Igor Spacek',
+                    'Martin Otáhal': 'Martin Otahal',
+                    'Ivo Otáhal': 'Ivo Otahal',
+                    'Miro Stašák': 'Miro Stasak',
+                    'Erik Čermák': 'Erik Cermak'
+                };
+                
+                this.users.forEach(u => {
+                    if (renameMap[u.name]) {
+                        u.name = renameMap[u.name];
+                        wasMigrated = true;
+                    }
+                });
+
+                this.reservations.forEach(r => {
+                    if (renameMap[r.pilotName]) {
+                        r.pilotName = renameMap[r.pilotName];
+                        wasMigrated = true;
+                    }
+                });
+ 
                 // Cache back to localStorage
                 this.set('users', this.users);
                 this.set('fleet', this.fleet);
                 this.set('reservations', this.reservations);
-
+ 
                 if (wasMigrated) {
                     this.saveToServer('users', this.users);
+                    this.saveToServer('reservations', this.reservations);
                 }
                 return true;
             }
